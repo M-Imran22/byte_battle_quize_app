@@ -1,22 +1,10 @@
-import {
-  FormLabel,
-  FormControl,
-  FormErrorMessage,
-} from "@chakra-ui/form-control";
-import {
-  Box,
-  Button,
-  Heading,
-  Input,
-  Spinner,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import useEditQuestion from "../hooks/useEditQuestion";
 import { useEffect } from "react";
 import { questionDataFormat } from "../hooks/useAddQuestion";
+import Button from "../../components/ui/Button";
+import Spinner from "../../components/ui/Spinner";
 
 const EditQuestion = () => {
   const { id } = useParams();
@@ -49,63 +37,58 @@ const EditQuestion = () => {
 
   if (isLoading) {
     return (
-      <Box textAlign="center" mt={5}>
-        <Spinner size="xl" />
-      </Box>
+      <div className="text-center mt-5">
+        <Spinner size="lg" />
+      </div>
     );
   }
 
   if (isError) {
     return (
-      <Box textAlign="center" mt={5}>
-        <Text color="red.500">
+      <div className="text-center mt-5">
+        <p className="text-red-500">
           Failed to load question data. Please try again.
-        </Text>
-      </Box>
+        </p>
+      </div>
     );
   }
 
   return (
-    <Box maxW="2xl" mx="auto" bg="white" p={8} borderRadius="xl" boxShadow="lg">
-      <Heading as="h2" size="xl" textAlign="center" mb={6} color="gray.800">
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+      <h2 className="text-3xl text-center mb-6 text-gray-800">
         Edit Question
-      </Heading>
-      <Text textAlign="center" color="gray.600" mb={6}>
+      </h2>
+      <p className="text-center text-gray-600 mb-6">
         Update the fields below to modify the question.
-      </Text>
-      <Box p={6} borderRadius="md">
+      </p>
+      <div className="p-6 rounded-md">
         <form onSubmit={handleSubmit(submit)}>
-          <Stack gap={4}>
-            <FormControl isInvalid={!!errors.question}>
-              <FormLabel fontWeight="bold" color="gray.700">
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block font-bold text-gray-700 mb-2">
                 Question
-              </FormLabel>
-              <Input
+              </label>
+              <input
                 defaultValue={question?.question}
                 type="text"
                 placeholder="e.g., Who is the president of the USA?"
                 {...register("question", {
                   required: "This field is required",
                 })}
-                borderColor="#C9A834"
-                _hover={{ borderColor: "#dcbf3e" }}
-                _focus={{
-                  outline: "none",
-                  borderColor: "#C9A834",
-                  boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-                }}
-                p={4}
+                className="input-field"
               />
-              <FormErrorMessage>{errors.question?.message}</FormErrorMessage>
-            </FormControl>
+              {errors.question && (
+                <p className="text-red-500 text-sm mt-1">{errors.question?.message}</p>
+              )}
+            </div>
 
             {(["option_a", "option_b", "option_c", "option_d"] as const).map(
               (optionKey, index) => (
-                <FormControl key={optionKey} isInvalid={!!errors[optionKey]}>
-                  <FormLabel fontWeight="bold" color="gray.700">
+                <div key={optionKey}>
+                  <label className="block font-bold text-gray-700 mb-2">
                     Option {String.fromCharCode(65 + index)}
-                  </FormLabel>
-                  <Input
+                  </label>
+                  <input
                     defaultValue={question ? question[optionKey] : ""}
                     type="text"
                     placeholder={`e.g., ${
@@ -122,60 +105,47 @@ const EditQuestion = () => {
                         65 + index
                       )} is required`,
                     })}
-                    borderColor="#C9A834"
-                    _hover={{ borderColor: "#dcbf3e" }}
-                    _focus={{
-                      outline: "none",
-                      borderColor: "#C9A834",
-                      boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-                    }}
-                    p={4}
+                    className="input-field"
                   />
-                  <FormErrorMessage>
-                    {errors[optionKey]?.message}
-                  </FormErrorMessage>
-                </FormControl>
+                  {errors[optionKey] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors[optionKey]?.message}
+                    </p>
+                  )}
+                </div>
               )
             )}
 
-            <FormControl isInvalid={!!errors.correct_option}>
-              <FormLabel fontWeight="bold" color="gray.700">
+            <div>
+              <label className="block font-bold text-gray-700 mb-2">
                 Correct Option
-              </FormLabel>
-              <Input
+              </label>
+              <input
                 defaultValue={question?.correct_option}
                 type="text"
                 placeholder="e.g., A"
                 {...register("correct_option", {
                   required: "Correct option is required",
                 })}
-                borderColor="#C9A834"
-                _hover={{ borderColor: "#dcbf3e" }}
-                _focus={{
-                  outline: "none",
-                  borderColor: "#C9A834",
-                  boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-                }}
-                p={4}
+                className="input-field"
               />
-              <FormErrorMessage>
-                {errors.correct_option?.message}
-              </FormErrorMessage>
-            </FormControl>
+              {errors.correct_option && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.correct_option?.message}
+                </p>
+              )}
+            </div>
 
             <Button
-              bg="#C9A834"
-              size="lg"
               type="submit"
-              _hover={{ bg: "#dcbf3e" }}
-              width="full"
+              className="btn-primary w-full"
             >
               Update Question
             </Button>
-          </Stack>
+          </div>
         </form>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

@@ -1,9 +1,3 @@
-import { Box, Button, Heading, Input } from "@chakra-ui/react";
-import {
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-} from "@chakra-ui/form-control";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import useLogin, { Schema, UserLoginData } from "./useLogin";
@@ -23,67 +17,60 @@ function Login() {
   };
 
   return (
-    <Box
-      maxW="sm"
-      mx="auto"
-      bg="white"
-      p={8}
-      mt={8}
-      borderRadius="xl"
-      boxShadow="lg"
-    >
-      <Heading fontSize="28px" py="30px" textAlign="center" color="gray.800">
-        Log In
-      </Heading>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <FormControl isInvalid={!!errors.email} py="20px">
-          <FormLabel>Email</FormLabel>
-          <Input
-            {...register("email")}
-            type="email"
-            placeholder="Johndoe@gmail.com"
-            bg="gray.50"
-            borderColor="#C9A834"
-            _hover={{ borderColor: "#dcbf3e" }}
-            _focus={{
-              outline: "none",
-              borderColor: "#C9A834",
-              boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-            }}
-          />
-          <FormErrorMessage>{errors.email?.message as string}</FormErrorMessage>
-        </FormControl>
-        <FormControl isInvalid={!!errors.password} py="20px">
-          <FormLabel>Password</FormLabel>
-          <Input
-            {...register("password")}
-            type="password"
-            placeholder="********"
-            bg="gray.50"
-            borderColor="#C9A834"
-            _hover={{ borderColor: "#dcbf3e" }}
-            _focus={{
-              outline: "none",
-              borderColor: "#C9A834",
-              boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-            }}
-          />
-          <FormErrorMessage>
-            {errors.password?.message as string}
-          </FormErrorMessage>
-        </FormControl>
-        <Button
-          type="submit"
-          py="20px"
-          bg="#C9A834"
-          color="black"
-          _hover={{ bg: "#dcbf3e" }}
-          width="full"
-        >
-          Login
-        </Button>
-      </form>
-    </Box>
+    <div className="min-h-screen bg-gradient-to-br from-gold-50 via-white to-gold-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="card shadow-gold-lg border-2 border-gold-200 p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+            <p className="text-gray-600">Sign in to your account</p>
+          </div>
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <input
+                {...register("email")}
+                type="email"
+                placeholder="johndoe@gmail.com"
+                className={`input-field bg-gray-50 ${errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email.message as string}</p>
+              )}
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+              <input
+                {...register("password")}
+                type="password"
+                placeholder="Enter your password"
+                className={`input-field bg-gray-50 ${errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-100' : ''}`}
+              />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password.message as string}</p>
+              )}
+            </div>
+            
+            <button
+              type="submit"
+              className="btn-primary w-full py-3 text-lg"
+            >
+              Sign In
+            </button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              Don't have an account?{' '}
+              <a href="/register" className="text-gold hover:text-gold-600 font-semibold transition-colors">
+                Sign up
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

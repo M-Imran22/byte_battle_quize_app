@@ -1,19 +1,10 @@
 import useSingleMatch from "../match/hooks/useSingleMatch";
 import { useParams } from "react-router-dom";
-import {
-  Box,
-  Button,
-  Heading,
-  Flex,
-  Text,
-  VStack,
-  SimpleGrid,
-  Image,
-} from "@chakra-ui/react";
 import useAllQuestoins, { Question } from "../questions/hooks/uesAllQustions";
 import { useState, useEffect } from "react";
 import useAllBuzzers from "../buzzer/hooks/useAllBuzzers";
 import byteBattleLogo from "../assets/logo.jpg";
+import Button from "./ui/Button";
 
 function MainScreen() {
   const { id } = useParams();
@@ -65,12 +56,6 @@ function MainScreen() {
     setPreviousQuestion((prev) => [...prev, actualIndex]);
     return availableQuestions[randomIndex];
   };
-
-  // Play sound using HTML5 Audio (if needed)
-  // const playSound = (soundFile: string) => {
-  //   const audio = new Audio(soundFile);
-  //   audio.play();
-  // };
 
   // Display confetti celebration effect for correct answers
   const displayCelebration = () => {
@@ -158,95 +143,50 @@ function MainScreen() {
           }
         }
       `}</style>
-      <Flex
-        minH="100vh"
-        p={4}
-        bg={backgroundColor} // Use Chakra UI's bg prop
-        justifyContent="space-between"
-        flexWrap={{ base: "wrap", md: "nowrap" }}
+      <div
+        className={`min-h-screen p-4 flex justify-between flex-wrap md:flex-nowrap`}
+        style={{ backgroundColor }}
       >
         {/* Score Board */}
-        <Box
-          bg="white"
-          p={6}
-          borderRadius="xl"
-          boxShadow="md"
-          maxW="auto"
-          position="sticky"
-          top={4}
-          height="fit-content"
-        >
-          <Heading
-            size={"3xl"}
-            mb={6}
-            color="red"
-            fontWeight="bold"
-            textAlign="center"
-          >
+        <div className="bg-white p-6 rounded-xl shadow-md max-w-auto sticky top-4 h-fit">
+          <h1 className="text-5xl mb-6 text-red-600 font-bold text-center">
             Score Board
-          </Heading>
-          <VStack gap={3} align="stretch">
+          </h1>
+          <div className="flex flex-col gap-3">
             {match?.rounds.map((round) => (
-              <Flex
+              <div
                 key={round.id}
-                bg="white"
-                p={3}
-                borderRadius="md"
-                borderLeft="4px solid red"
-                justify="space-between"
-                align="center"
-                boxShadow="sm"
+                className="bg-white p-3 rounded-md border-l-4 border-red-600 flex justify-between items-center shadow-sm"
               >
-                <Text fontWeight="600" fontSize="xl" color="blue">
+                <span className="font-semibold text-xl text-blue-600">
                   {round.teams.team_name}
-                </Text>
-                <Text ml={7} fontSize="3xl" fontWeight="bold" color="gray.800">
+                </span>
+                <span className="ml-7 text-3xl font-bold text-gray-800">
                   {round.score}
-                </Text>
-              </Flex>
+                </span>
+              </div>
             ))}
-          </VStack>
-        </Box>
+          </div>
+        </div>
 
         {/* Main Question Area */}
-        <Box
-          flex={1}
-          maxW="auto"
-          bg="white"
-          p={6}
-          mb="50px"
-          borderRadius="xl"
-          boxShadow="md"
-          mx={{ base: 0, md: 6 }}
-          mt={{ base: 6, md: 0 }}
-          border="4px solid gold"
-        >
+        <div className="flex-1 max-w-auto bg-white p-6 mb-12 rounded-xl shadow-md mx-0 md:mx-6 mt-6 md:mt-0 border-4 border-gold-500">
           {/* Optional ByteBattle24 Logo at the top */}
-          <Box textAlign="center">
-            <Image
+          <div className="text-center">
+            <img
               src={byteBattleLogo}
               alt="ByteBattle24 Logo"
-              mx="auto"
-              mb={4}
-              height="200px"
+              className="mx-auto mb-4 h-48"
             />
-          </Box>
+          </div>
 
           {currentQuestion ? (
-            <Box mt={4} textAlign="center">
-              <Heading
-                size="lg"
-                mb={6}
-                color="black"
-                fontWeight="semibold"
-                border="2px solid black"
-                borderRadius={"md"}
-                p={4}
-              >
+            <div className="mt-4 text-center">
+              <h2 className="text-xl mb-6 text-black font-semibold border-2 border-black rounded-md p-4">
                 {currentQuestion.question}
-              </Heading>
+              </h2>
 
-              <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {["option_a", "option_b", "option_c", "option_d"].map(
                   (optionKey, index) => {
                     const optionValue = currentQuestion
@@ -257,142 +197,99 @@ function MainScreen() {
                       optionValue === currentQuestion?.correct_option;
 
                     // When correct answer is revealed, the selected button turns green
-                    let background = "gold";
+                    let background = "#C9A834";
                     if (showCorrectAnswer && isCorrect) {
-                      background = "green";
+                      background = "#10B981";
                     } else if (isActive) {
-                      background = "blue.500";
+                      background = "#3B82F6";
                     }
 
                     return (
-                      <Button
+                      <button
                         key={optionKey}
                         onClick={() =>
                           handleCorrectOption(optionValue as string)
                         }
-                        bg={background}
-                        color="white"
-                        size="lg"
-                        height="80px"
-                        borderRadius="md"
-                        _hover={{ bg: "#dcbf3e" }}
-                        fontWeight="bold"
+                        className={`text-white text-lg h-20 rounded-md font-bold hover:bg-gold-400 transition-colors flex flex-col items-center justify-center gap-1 p-2`}
+                        style={{ backgroundColor: background }}
                       >
-                        <VStack gap={0} mt={2}>
-                          <Box
-                            as="span"
-                            fontWeight="bold"
-                            color="blue.600"
-                            width="40px"
-                            height="40px"
-                            bg="white"
-                            borderRadius="5px"
-                            pt={2}
-                            fontSize="xl"
-                          >
-                            {String.fromCharCode(65 + index)}
-                          </Box>
-                          {optionValue}
-                        </VStack>
-                      </Button>
+                        <span className="font-bold text-blue-600 w-10 h-10 bg-white rounded-md flex items-center justify-center text-xl">
+                          {String.fromCharCode(65 + index)}
+                        </span>
+                        <span className="text-sm">{optionValue}</span>
+                      </button>
                     );
                   }
                 )}
-              </SimpleGrid>
-            </Box>
+              </div>
+            </div>
           ) : (
-            <Text mt={4} fontSize="xl" color="gray.500" textAlign="center">
+            <p className="mt-4 text-xl text-gray-500 text-center">
               {filteredQuestions?.length
                 ? "Click next to start!"
                 : "No questions available"}
-            </Text>
+            </p>
           )}
 
           {filteredQuestions?.length && (
-            <Text mt={4} fontSize="md" color="gray.500" textAlign="center">
+            <p className="mt-4 text-md text-gray-500 text-center">
               Questions remaining:{" "}
-              <Box as="span" fontWeight="bold" color="blue.600">
+              <span className="font-bold text-blue-600">
                 {filteredQuestions.length - previousQuestion.length}
-              </Box>
-            </Text>
+              </span>
+            </p>
           )}
 
-          <Flex justify="center" gap={4} mt={8}>
+          <div className="flex justify-center gap-4 mt-8">
             <Button
               onClick={handleNextQuestion}
-              bg="blue.700"
-              color="white"
-              size="md"
-              px={6}
-              fontWeight="bold"
+              className="bg-blue-700 text-white px-6 font-bold hover:bg-blue-600"
             >
               Next Question
             </Button>
             <Button
               onClick={handleCheckButton}
-              bg="blue.700"
-              color="white"
-              size="md"
-              px={6}
-              fontWeight="bold"
+              className="bg-blue-700 text-white px-6 font-bold hover:bg-blue-600"
             >
               Check Answer
             </Button>
             {showAnswer && (
               <Button
                 onClick={() => setShowCorrectAnswer(true)}
-                bg={"green"}
-                color="white"
-                size="md"
-                px={6}
-                fontWeight="bold"
+                className="bg-green-600 text-white px-6 font-bold hover:bg-green-500"
               >
                 Reveal Answer
               </Button>
             )}
-          </Flex>
-        </Box>
+          </div>
+        </div>
 
         {/* Buzzers */}
-        <Box
-          bg="white"
-          p={6}
-          borderRadius="xl"
-          boxShadow="md"
-          maxW="auto"
-          position="sticky"
-          top={4}
-          height="fit-content"
-        >
-          <Heading size="3xl" mb={4} color="red" fontWeight="bold">
+        <div className="bg-white p-6 rounded-xl shadow-md max-w-auto sticky top-4 h-fit">
+          <h1 className="text-5xl mb-4 text-red-600 font-bold">
             Buzzers
-          </Heading>
-          <VStack gap={3} align="stretch">
+          </h1>
+          <div className="flex flex-col gap-3">
             {buzzers?.map((buzzer) => (
-              <Flex
+              <div
                 key={buzzer.id}
-                bg="gray.50"
-                p={3}
-                borderRadius="md"
-                direction="column"
-                borderLeft="3px solid red"
-                boxShadow="sm"
+                className="bg-gray-50 p-3 rounded-md flex flex-col border-l-4 border-red-600 shadow-sm"
               >
-                <Text fontSize="xl" fontWeight="600" color="blue">
+                <span className="text-xl font-semibold text-blue-600">
                   {buzzer.teamName}
-                </Text>
-                <Text fontSize="sm" color="gray.500">
+                </span>
+                <span className="text-sm text-gray-500">
                   {new Date(buzzer.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                     second: "2-digit",
                   })}
-                </Text>
-              </Flex>
+                </span>
+              </div>
             ))}
-          </VStack>
-        </Box>
-      </Flex>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

@@ -1,15 +1,14 @@
-import { Box } from "@chakra-ui/react";
 import { Outlet } from "react-router-dom";
 import Nevbar from "./components/Nevbar";
 
 function LayOut() {
   return (
-    <Box>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Nevbar />
-      <Box width="auto" mx="auto" p={8} mt={12}>
+      <div className="container mx-auto px-8 py-8 mt-20">
         <Outlet />
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }
 

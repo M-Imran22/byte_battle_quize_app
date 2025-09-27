@@ -1,17 +1,10 @@
-import {
-  Box,
-  Text,
-  Table,
-  Heading,
-  Input,
-  Spinner,
-  Button,
-} from "@chakra-ui/react";
 import useSingleMatch from "../hooks/useSingleMatch";
 import { useParams } from "react-router-dom";
-import { FormControl } from "@chakra-ui/form-control";
 import { useEffect, useState } from "react";
 import useResetBuzzers from "../../buzzer/hooks/useResetBuzzers";
+import { Table, TableHeader, TableBody, TableRow, TableCell, TableHeaderCell } from "../../components/ui/Table";
+import Button from "../../components/ui/Button";
+import Spinner from "../../components/ui/Spinner";
 
 function Scoreboard() {
   const { id } = useParams<{ id: string }>();
@@ -43,25 +36,20 @@ function Scoreboard() {
 
   if (isLoading)
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <Spinner size="xl" />
-      </Box>
+      <div className="flex justify-center items-center h-screen">
+        <Spinner size="lg" />
+      </div>
     );
 
   if (isError)
     return (
-      <Box textAlign="center" mt={5}>
-        <Text color="red.500">
+      <div className="text-center mt-5">
+        <p className="text-red-500">
           Failed to load match data. Please try again.
-        </Text>
-      </Box>
+        </p>
+      </div>
     );
-  if (!match) return <Box>No match data found.</Box>;
+  if (!match) return <div>No match data found.</div>;
 
   const handleScoreChange = (roundId: number, score: number) => {
     setScores((prev) => ({ ...prev, [roundId]: score }));
@@ -77,70 +65,42 @@ function Scoreboard() {
   };
 
   return (
-    <Box
-      maxW="container.lg"
-      mx="auto"
-      p={6}
-      bg="white"
-      borderRadius="xl"
-      boxShadow="md"
-    >
-      <Heading mb={6} color="gray.800">
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-md">
+      <h1 className="mb-6 text-gray-800 text-3xl font-bold">
         Scoreboard for {match?.match_type} – {match?.match_name}
-      </Heading>
-      <Table.Root variant="line">
-        <Table.Header bg="gray.100">
-          <Table.Row>
-            <Table.ColumnHeader>Team</Table.ColumnHeader>
-            <Table.ColumnHeader>Score</Table.ColumnHeader>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
+      </h1>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHeaderCell>Team</TableHeaderCell>
+            <TableHeaderCell>Score</TableHeaderCell>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {match.rounds.map((round) => (
-            <Table.Row key={round.id} _hover={{ bg: "gray.50" }}>
-              <Table.Cell>{round.teams.team_name}</Table.Cell>
-              <Table.Cell>
-                <FormControl>
-                  <Input
-                    value={scores[round.id] ?? round.score}
-                    onChange={(e) =>
-                      handleScoreChange(round.id, parseInt(e.target.value) || 0)
-                    }
-                    borderColor="#C9A834"
-                    _hover={{ borderColor: "#dcbf3e" }}
-                    _focus={{
-                      outline: "none",
-                      borderColor: "#C9A834",
-                      boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-                    }}
-                  />
-                </FormControl>
-              </Table.Cell>
-            </Table.Row>
+            <TableRow key={round.id}>
+              <TableCell>{round.teams.team_name}</TableCell>
+              <TableCell>
+                <input
+                  type="number"
+                  value={scores[round.id] ?? round.score}
+                  onChange={(e) =>
+                    handleScoreChange(round.id, parseInt(e.target.value) || 0)
+                  }
+                  className="input-field"
+                />
+              </TableCell>
+            </TableRow>
           ))}
-        </Table.Body>
-      </Table.Root>
+        </TableBody>
+      </Table>
       <Button
-        mt={6}
-        type="submit"
         onClick={handleSubmit}
-        bg="#C9A834"
-        color="white"
-        _hover={{ bg: "#dcbf3e" }}
+        className="btn-primary mt-6"
       >
         Update Score
       </Button>
-      {/* <Button
-        mt={6}
-        ml={6}
-        onClick={handleResetBuzzers}
-        bg="red"
-        color="white"
-        _hover={{ bg: "red.500" }}
-      >
-        reset buzzers
-      </Button> */}
-    </Box>
+    </div>
   );
 }
 

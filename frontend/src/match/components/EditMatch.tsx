@@ -1,24 +1,12 @@
-import {
-  Box,
-  Button,
-  Heading,
-  HStack,
-  Text,
-  Input,
-  VStack,
-} from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { matchDataFormat } from "../hooks/useAddMatch";
 import useAllTeams from "../../teams/hooks/useAllTeams";
 import { useEffect, useState } from "react";
-import {
-  FormControl,
-  FormErrorMessage,
-  FormLabel,
-} from "@chakra-ui/form-control";
 import useEditMatch from "../hooks/useEditMatch";
 import { useParams } from "react-router-dom";
 import useSingleMatch from "../hooks/useSingleMatch";
+import Button from "../../components/ui/Button";
+import Spinner from "../../components/ui/Spinner";
 
 export const EditMatch = () => {
   const { id } = useParams();
@@ -72,103 +60,87 @@ export const EditMatch = () => {
 
   if (isLoading) {
     return (
-      <Box textAlign="center" mt={6}>
-        <Text>Loading teams...</Text>
-      </Box>
+      <div className="text-center mt-6">
+        <Spinner />
+        <p>Loading teams...</p>
+      </div>
     );
   }
   if (isError) {
     return (
-      <Box textAlign="center" mt={6}>
-        <Text color="red.500">Error fetching teams.</Text>
-      </Box>
+      <div className="text-center mt-6">
+        <p className="text-red-500">Error fetching teams.</p>
+      </div>
     );
   }
 
   return (
-    <Box maxW="2xl" mx="auto" bg="white" p={8} borderRadius="xl" boxShadow="lg">
-      <Heading as="h2" size="xl" textAlign="center" mb={6} color="gray.800">
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+      <h2 className="text-3xl text-center mb-6 text-gray-800">
         Update Match
-      </Heading>
+      </h2>
       <form onSubmit={handleSubmit(submit)}>
-        <VStack align="stretch" gap={4}>
+        <div className="flex flex-col gap-4">
           {/* Match Name Input */}
-          <FormControl>
-            <FormLabel>Enter Match Name</FormLabel>
-            <Input
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Enter Match Name</label>
+            <input
               defaultValue={match?.match_name}
               type="text"
               placeholder="Enter match name"
               {...register("match_name", { required: true })}
-              borderColor="#C9A834"
-              _hover={{ borderColor: "#dcbf3e" }}
-              _focus={{
-                outline: "none",
-                borderColor: "#C9A834",
-                boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-              }}
+              className="input-field"
             />
-          </FormControl>
+          </div>
 
           {/* Row with Match Type on left and Add Team on right */}
-          <HStack gap={4}>
-            <Box flex={1}>
-              <FormControl>
-                <FormLabel>Select Match Type</FormLabel>
-                {/* Using native select tag */}
-                <select
-                  {...register("match_type", { required: true })}
-                  defaultValue={match?.match_type}
-                  style={{
-                    width: "100%",
-                    padding: "0.5rem",
-                    borderRadius: "0.375rem",
-                    border: "2px solid #C9A834",
-                  }}
-                >
-                  <option value="">
-                    {match?.match_type || "Select match type"}
-                  </option>
-                  <option value="ICT">ICT</option>
-                  <option value="General Knowledge">General Knowledge</option>
-                </select>
-              </FormControl>
-            </Box>
-            <Box flex={1}>
-              <FormControl>
-                <FormLabel>Add Team</FormLabel>
-                <Button
-                  onClick={handleAddTeam}
-                  bg="blue.700"
-                  color="white"
-                  variant="outline"
-                  size="sm"
-                  _hover={{ bg: "blue.600" }}
-                  width="100%"
-                >
-                  Add Team
-                </Button>
-              </FormControl>
-            </Box>
-          </HStack>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Match Type</label>
+              <select
+                {...register("match_type", { required: true })}
+                defaultValue={match?.match_type}
+                className="input-field"
+              >
+                <option value="">
+                  {match?.match_type || "Select match type"}
+                </option>
+                <option value="ICT">ICT</option>
+                <option value="General Knowledge">General Knowledge</option>
+                <option value="English">English</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Science">Science</option>
+                <option value="History">History</option>
+                <option value="Geography">Geography</option>
+                <option value="Sports">Sports</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Current Affairs">Current Affairs</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Add Team</label>
+              <Button
+                onClick={handleAddTeam}
+                className="btn-primary w-full"
+                type="button"
+              >
+                Add Team
+              </Button>
+            </div>
+          </div>
 
           {/* Team Sections */}
-          <FormControl isInvalid={!!error}>
-            <VStack align="stretch">
+          <div>
+            <div className="flex flex-col gap-2">
               {teamSections.map((section, index) => (
-                <HStack key={section.id}>
+                <div key={section.id} className="flex gap-2">
                   <select
                     id={`team_${index}`}
                     value={section.value}
                     onChange={(e) =>
                       handleTeamChange(section.id, e.target.value)
                     }
-                    style={{
-                      width: "100%",
-                      padding: "0.5rem",
-                      borderRadius: "0.375rem",
-                      border: "2px solid #C9A834",
-                    }}
+                    className="input-field flex-1"
                   >
                     <option value="">Select a team</option>
                     {teams?.map((team) => (
@@ -178,37 +150,31 @@ export const EditMatch = () => {
                     ))}
                   </select>
                   <Button
-                    size="sm"
-                    bg="red.600"
-                    color="white"
+                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500"
                     onClick={() => handleRemoveTeam(section.id)}
-                    _hover={{ bg: "red.500" }}
+                    type="button"
                   >
                     Remove
                   </Button>
-                </HStack>
+                </div>
               ))}
-            </VStack>
+            </div>
             {error && (
-              <FormErrorMessage pt={4} color="red.500">
+              <p className="pt-4 text-red-500 text-sm">
                 {error}
-              </FormErrorMessage>
+              </p>
             )}
-          </FormControl>
+          </div>
 
           <Button
-            mt={6}
             type="submit"
-            size="md"
-            bg="#C9A834"
-            color="white"
-            _hover={{ bg: "#dcbf3e" }}
+            className="btn-primary mt-6"
           >
             Submit
           </Button>
-        </VStack>
+        </div>
       </form>
-    </Box>
+    </div>
   );
 };
 

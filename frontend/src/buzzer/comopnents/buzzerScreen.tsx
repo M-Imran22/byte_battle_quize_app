@@ -1,20 +1,11 @@
-// buzzer.tsx
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { motion } from "framer-motion";
-import { Button, Flex, VStack, Input, Text, Box } from "@chakra-ui/react";
 import { useState } from "react";
 import useBuzzerMutation, {
   TeamFormData,
   teamSchema,
 } from "../hooks/useBuzzer";
-
-// Animation variants
-const buttonVariants = {
-  initial: { scale: 1 },
-  pressed: { scale: 0.95 },
-};
 
 const BuzzerPage = () => {
   const [showBuzzer, setShowBuzzer] = useState(false);
@@ -46,59 +37,81 @@ const BuzzerPage = () => {
   };
 
   return (
-    <Flex minH="100vh" align="center" justify="center">
-      <VStack gap={8} w="100%" maxW="md" px={4}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
         {!showBuzzer ? (
-          <Box as="form" w="100%" onSubmit={handleSubmit(handleFormSubmit)}>
-            <VStack gap={4}>
-              <Input
-                {...register("teamName")}
-                placeholder="Enter team name"
-                size="lg"
-                autoComplete="off"
-              />
-              {errors.teamName && (
-                <Text color="red.500">{errors.teamName.message}</Text>
-              )}
-              <Button type="submit" background="blue" w="100%">
-                Register Team
-              </Button>
-            </VStack>
-          </Box>
-        ) : (
-          <VStack gap={6}>
-            <Text fontSize="2xl" fontWeight="bold">
-              {teamName}
-            </Text>
-            <motion.div
-              variants={buttonVariants}
-              animate={isPressed ? "pressed" : "initial"}
-            >
-              <Button
-                onClick={handleBuzzerPress}
-                disabled={isPressed}
-                size="lg"
-                w="250px"
-                h="250px"
-                borderRadius="full"
-                bg={isPressed ? "green" : "red"}
-                color="white"
-                fontSize="3xl"
-                fontWeight="bold"
-                boxShadow="xl"
-                _hover={{
-                  transform: "scale(1.05)",
-                  boxShadow: "2xl",
-                }}
-                transition="all 0.2s cubic-bezier(.08,.52,.52,1)"
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 shadow-2xl">
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-white mb-2">⚡ Buzzer System</h1>
+              <p className="text-gray-300">Enter your team name to join</p>
+            </div>
+            
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+              <div>
+                <input
+                  {...register("teamName")}
+                  placeholder="Enter team name"
+                  className="w-full px-4 py-4 bg-white/20 border border-white/30 text-white placeholder-gray-300 text-lg rounded-lg focus:border-gold focus:ring-4 focus:ring-gold-100 transition-all duration-200"
+                  autoComplete="off"
+                />
+                {errors.teamName && (
+                  <p className="mt-2 text-red-400 text-sm">{errors.teamName.message}</p>
+                )}
+              </div>
+              
+              <button 
+                type="submit" 
+                className="btn-primary w-full py-4 text-lg shadow-gold"
               >
-                BUZZ!
-              </Button>
-            </motion.div>
-          </VStack>
+                🚀 Join the Battle
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-white mb-2">🏆 {teamName}</h2>
+              <p className="text-gray-300">Ready to buzz in!</p>
+            </div>
+            
+            <motion.button
+              whileHover={!isPressed ? { scale: 1.05 } : {}}
+              whileTap={!isPressed ? { scale: 0.95 } : {}}
+              onClick={handleBuzzerPress}
+              disabled={isPressed}
+              className={`
+                w-64 h-64 rounded-full text-white text-4xl font-bold
+                transition-all duration-300 ease-out
+                ${isPressed 
+                  ? 'bg-gradient-to-br from-green-400 to-green-600 cursor-not-allowed animate-pulse' 
+                  : 'bg-gradient-to-br from-red-500 to-red-700 hover:from-red-400 hover:to-red-600 cursor-pointer shadow-2xl'
+                }
+              `}
+            >
+              {isPressed ? (
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl mb-2">✓</span>
+                  <span className="text-lg">BUZZED!</span>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl mb-2">⚡</span>
+                  <span>BUZZ!</span>
+                </div>
+              )}
+            </motion.button>
+            
+            {isPressed && (
+              <div className="mt-8 text-center">
+                <p className="text-green-400 text-xl font-semibold">
+                  ✨ Buzzer activated! Wait for the host.
+                </p>
+              </div>
+            )}
+          </div>
         )}
-      </VStack>
-    </Flex>
+      </div>
+    </div>
   );
 };
 

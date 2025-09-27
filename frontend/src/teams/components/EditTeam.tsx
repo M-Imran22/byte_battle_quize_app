@@ -1,24 +1,10 @@
-import {
-  Box,
-  Button,
-  Heading,
-  Input,
-  Textarea,
-  Stack,
-  Text,
-  Spinner,
-} from "@chakra-ui/react";
-import {
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-} from "@chakra-ui/form-control";
 import { useForm } from "react-hook-form";
 import { TeamAdditionData } from "../hooks/useAddTeam";
 import { useNavigate, useParams } from "react-router-dom";
-// import { zodResolver } from "@hookform/resolvers/zod";
 import useEditTeam from "../hooks/useEditTeam";
 import { useEffect } from "react";
+import Button from "../../components/ui/Button";
+import Card from "../../components/ui/Card";
 
 const EditTeam = () => {
   const { id } = useParams();
@@ -52,88 +38,87 @@ const EditTeam = () => {
 
   if (isLoading) {
     return (
-      <Box textAlign="center" mt={5}>
-        <Spinner size="xl" />
-      </Box>
+      <div className="flex justify-center items-center min-h-64">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-gold border-t-transparent"></div>
+      </div>
     );
   }
 
   if (isError) {
     return (
-      <Box textAlign="center" mt={5}>
-        <Text color="red.500">Failed to load team data. Please try again.</Text>
-      </Box>
+      <div className="text-center mt-8">
+        <div className="text-red-500 text-lg font-semibold">
+          Failed to load team data. Please try again.
+        </div>
+      </div>
     );
   }
 
   return (
-    <Box maxW="2xl" mx="auto" bg="white" p={8} borderRadius="xl" boxShadow="lg">
-      <Heading as="h2" size="xl" textAlign="center" mb={6} color="gray.800">
-        Edit Team
-      </Heading>
-      <Text textAlign="center" color="gray.600" mb={6}>
-        Please update the details below to modify the team.
-      </Text>
-      <Box p={6} borderRadius="md">
-        <form onSubmit={handleSubmit(submit)}>
-          <Stack gap={4}>
-            <FormControl isInvalid={!!errors.team_name}>
-              <FormLabel fontWeight="bold" color="gray.700">
-                Team Name
-              </FormLabel>
-              <Input
-                defaultValue={team?.team_name}
-                type="text"
-                placeholder="Enter the team name"
-                {...register("team_name", {
-                  required: "Team name is required",
-                })}
-                borderColor="#C9A834"
-                _hover={{ borderColor: "#dcbf3e" }}
-                _focus={{
-                  outline: "none",
-                  borderColor: "#C9A834",
-                  boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-                }}
-              />
-              <FormErrorMessage>{errors.team_name?.message}</FormErrorMessage>
-            </FormControl>
+    <div className="max-w-2xl mx-auto">
+      <Card className="shadow-gold-lg border-2 border-gold-200">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            ✏️ Edit Team
+          </h1>
+          <p className="text-gray-600">
+            Update the team details below
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit(submit)} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Team Name</label>
+            <input
+              type="text"
+              placeholder="Enter the team name"
+              defaultValue={team?.team_name}
+              {...register("team_name", {
+                required: "Team name is required",
+              })}
+              className={`input-field text-lg py-4 ${errors.team_name ? 'border-red-500' : ''}`}
+            />
+            {errors.team_name && (
+              <p className="mt-1 text-sm text-red-600">{errors.team_name.message}</p>
+            )}
+          </div>
 
-            <FormControl isInvalid={!!errors.description}>
-              <FormLabel fontWeight="bold" color="gray.700">
-                Description
-              </FormLabel>
-              <Textarea
-                defaultValue={team?.description}
-                placeholder="Enter a brief description of the team"
-                {...register("description", {
-                  required: "Description is required",
-                })}
-                borderColor="#C9A834"
-                _hover={{ borderColor: "#dcbf3e" }}
-                _focus={{
-                  outline: "none",
-                  borderColor: "#C9A834",
-                  boxShadow: "0 0 0 3px rgba(201,168,52,0.5)",
-                }}
-              />
-              <FormErrorMessage>{errors.description?.message}</FormErrorMessage>
-            </FormControl>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              placeholder="Enter a brief description of the team"
+              defaultValue={team?.description}
+              {...register("description", {
+                required: "Description is required",
+              })}
+              className={`input-field min-h-32 resize-none ${errors.description ? 'border-red-500' : ''}`}
+            />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+            )}
+          </div>
 
+          <div className="flex gap-4">
             <Button
-              bg="#C9A834"
-              color="white"
+              type="button"
+              variant="secondary"
               size="lg"
-              type="submit"
-              _hover={{ bg: "#dcbf3e" }}
-              width="full"
+              className="flex-1"
+              onClick={() => navigate("/team/all_teams")}
             >
-              Save Changes
+              Cancel
             </Button>
-          </Stack>
+            <Button
+              type="submit"
+              size="lg"
+              className="flex-1 shadow-gold"
+            >
+              ✨ Save Changes
+            </Button>
+          </div>
         </form>
-      </Box>
-    </Box>
+      </Card>
+    </div>
   );
 };
 
