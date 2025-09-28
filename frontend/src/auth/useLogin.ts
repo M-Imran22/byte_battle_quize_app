@@ -18,13 +18,13 @@ const useLogin = () => {
 
   return useMutation({
     mutationFn: async (data: UserLoginData) => {
-      const responce = await axios.post("login", data);
-
-      console.log(responce.data);
+      const response = await axios.post("login", data);
+      console.log(response.data);
+      return response.data; // Return the response data
     },
-    onSuccess: () => {
-      navigate(from, { replace: true });
+    onSuccess: (data) => {
       console.log("Login successful.");
+      // Don't navigate here, let the component handle it
     },
     onError: (error) => {
       console.log("Login failed.", error.message);

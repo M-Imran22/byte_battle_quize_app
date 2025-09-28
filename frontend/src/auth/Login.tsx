@@ -1,6 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 import useLogin, { Schema, UserLoginData } from "./useLogin";
+import { useAuth } from "../contexts/AuthContext";
+import { createSocket } from "../services/socket";
 
 function Login() {
   const {
@@ -10,10 +13,20 @@ function Login() {
   } = useForm<UserLoginData>({ resolver: zodResolver(Schema) });
 
   const mutation = useLogin();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = (data: UserLoginData) => {
-    mutation.mutate(data);
-    console.log(data.password);
+    mutation.mutate(data, {
+      onSuccess: (response: any) => {
+        // Response structure: { accessToken, message }
+        const token = response.accessToken;
+        const user = { id: 1, username: 'User', email: data.email }; // Mock user data
+        login(token, user);
+        createSocket(); // Create socket connection after login
+        navigate('/team/all_teams');
+      }
+    });
   };
 
   return (

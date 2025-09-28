@@ -5,6 +5,7 @@ import useResetBuzzers from "../../buzzer/hooks/useResetBuzzers";
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHeaderCell } from "../../components/ui/Table";
 import Button from "../../components/ui/Button";
 import Spinner from "../../components/ui/Spinner";
+import { getSocket, createSocket } from "../../services/socket";
 
 function Scoreboard() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,11 @@ function Scoreboard() {
     resetBuzzers.mutate(undefined, {
       onSuccess: () => {
         console.log("Buzzers reset successfully");
+        // Emit real-time buzzer reset
+        const socket = getSocket() || createSocket();
+        if (socket) {
+          socket.emit('reset-buzzers');
+        }
       },
       onError: (error: any) => {
         console.error("Failed to reset buzzers:", error.message);
@@ -60,8 +66,16 @@ function Scoreboard() {
       ...round,
       score: scores[round.id],
     }));
-    mutation.mutate(updatedRounds);
-    handleResetBuzzers();
+    mutation.mutate(updatedRounds, {
+      onSuccess: () => {
+        // Emit real-time score update
+        const socket = getSocket() || createSocket();
+        if (socket) {
+          socket.emit('scores-updated', { matchId: id, scores });
+        }
+        handleResetBuzzers();
+      }
+    });
   };
 
   return (

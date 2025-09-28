@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { io } from 'socket.io-client';
 import useBuzzerMutation, {
   TeamFormData,
   teamSchema,
@@ -29,6 +30,28 @@ const BuzzerPage = () => {
   const handleBuzzerPress = async () => {
     setIsPressed(true);
     const timestamp = new Date().toISOString();
+
+    // Emit real-time buzzer press FIRST
+    const buzzerSocket = io('http://192.168.100.4:3000');
+    
+    buzzerSocket.on('connect', () => {
+      console.log('Buzzer socket connected!');
+      buzzerSocket.emit('buzzer-press', {
+        teamName,
+        timestamp,
+      });
+      console.log('Buzzer press emitted:', { teamName, timestamp });
+    });
+    
+    // Listen for buzzer reset
+    buzzerSocket.on('buzzers-reset', () => {
+      console.log('Buzzers reset - resetting mobile buzzer');
+      setIsPressed(false);
+    });
+    
+    buzzerSocket.on('connect_error', (error) => {
+      console.error('Socket connection failed:', error);
+    });
 
     await mutateAsync({
       teamName,

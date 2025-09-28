@@ -5,12 +5,13 @@ import { useState, useEffect } from "react";
 import useAllBuzzers from "../buzzer/hooks/useAllBuzzers";
 import byteBattleLogo from "../assets/logo.jpg";
 import Button from "./ui/Button";
+import { getSocket, createSocket } from "../services/socket";
 
 function MainScreen() {
   const { id } = useParams();
-  const { data: match } = useSingleMatch(id);
+  const { data: match, refetch: refetchMatch } = useSingleMatch(id);
   const { data: questions } = useAllQuestoins();
-  const { data: buzzers } = useAllBuzzers();
+  const { data: buzzers, refetch: refetchBuzzers } = useAllBuzzers();
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [previousQuestion, setPreviousQuestion] = useState<number[]>([]);
   const [correctOption, setCorrectOption] = useState("");
@@ -21,10 +22,35 @@ function MainScreen() {
   let timeoutId: NodeJS.Timeout | null = null;
 
   useEffect(() => {
+    const socket = getSocket() || createSocket();
+    if (!socket) return;
+
+    // Listen for real-time buzzer presses
+    socket.on('buzzer-pressed', () => {
+      refetchBuzzers();
+    });
+
+    // Listen for buzzer resets
+    socket.on('buzzers-reset', () => {
+      refetchBuzzers();
+    });
+
+    // Listen for score updates
+    socket.on('scores-updated', (data: any) => {
+      if (data.matchId === id) {
+        refetchMatch(); // Refetch match data when scores update
+      }
+    });
+
     return () => {
-      if (timeoutId) clearTimeout(timeoutId); // Cleanup timeout on unmount
+      if (timeoutId) clearTimeout(timeoutId);
+      if (socket) {
+        socket.off('buzzer-pressed');
+        socket.off('buzzers-reset');
+        socket.off('scores-updated');
+      }
     };
-  }, []);
+  }, [refetchBuzzers, refetchMatch, id]);
 
   // Filter questions by match type (if applicable)
   const filteredQuestions = match?.match_type
@@ -121,10 +147,7 @@ function MainScreen() {
       setBackgroundColor("white");
     } else {
       setShowAnswer(true);
-      setBackgroundColor("red");
-      timeoutId = setTimeout(() => {
-        setBackgroundColor("white");
-      }, 4000);
+      // Keep white background, show wrong answer styling on question area
     }
   };
 
@@ -144,149 +167,183 @@ function MainScreen() {
         }
       `}</style>
       <div
-        className={`min-h-screen p-4 flex justify-between flex-wrap md:flex-nowrap`}
-        style={{ backgroundColor }}
+        className={`min-h-screen p-6 bg-gradient-to-br from-gold-50 via-white to-gold-100`}
+        style={{ backgroundColor: backgroundColor !== 'white' ? backgroundColor : undefined }}
       >
-        {/* Score Board */}
-        <div className="bg-white p-6 rounded-xl shadow-md max-w-auto sticky top-4 h-fit">
-          <h1 className="text-5xl mb-6 text-red-600 font-bold text-center">
-            Score Board
-          </h1>
-          <div className="flex flex-col gap-3">
-            {match?.rounds.map((round) => (
-              <div
-                key={round.id}
-                className="bg-white p-3 rounded-md border-l-4 border-red-600 flex justify-between items-center shadow-sm"
-              >
-                <span className="font-semibold text-xl text-blue-600">
-                  {round.teams.team_name}
-                </span>
-                <span className="ml-7 text-3xl font-bold text-gray-800">
-                  {round.score}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Main Question Area */}
-        <div className="flex-1 max-w-auto bg-white p-6 mb-12 rounded-xl shadow-md mx-0 md:mx-6 mt-6 md:mt-0 border-4 border-gold-500">
-          {/* Optional ByteBattle24 Logo at the top */}
-          <div className="text-center">
-            <img
-              src={byteBattleLogo}
-              alt="ByteBattle24 Logo"
-              className="mx-auto mb-4 h-48"
-            />
-          </div>
-
-          {currentQuestion ? (
-            <div className="mt-4 text-center">
-              <h2 className="text-xl mb-6 text-black font-semibold border-2 border-black rounded-md p-4">
-                {currentQuestion.question}
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {["option_a", "option_b", "option_c", "option_d"].map(
-                  (optionKey, index) => {
-                    const optionValue = currentQuestion
-                      ? currentQuestion[optionKey as keyof Question]
-                      : "";
-                    const isActive = activeOption === optionValue;
-                    const isCorrect =
-                      optionValue === currentQuestion?.correct_option;
-
-                    // When correct answer is revealed, the selected button turns green
-                    let background = "#C9A834";
-                    if (showCorrectAnswer && isCorrect) {
-                      background = "#10B981";
-                    } else if (isActive) {
-                      background = "#3B82F6";
-                    }
-
-                    return (
-                      <button
-                        key={optionKey}
-                        onClick={() =>
-                          handleCorrectOption(optionValue as string)
-                        }
-                        className={`text-white text-lg h-20 rounded-md font-bold hover:bg-gold-400 transition-colors flex flex-col items-center justify-center gap-1 p-2`}
-                        style={{ backgroundColor: background }}
-                      >
-                        <span className="font-bold text-blue-600 w-10 h-10 bg-white rounded-md flex items-center justify-center text-xl">
-                          {String.fromCharCode(65 + index)}
-                        </span>
-                        <span className="text-sm">{optionValue}</span>
-                      </button>
-                    );
-                  }
-                )}
-              </div>
+        <div className="flex justify-between gap-6 h-full">
+          {/* Score Board */}
+          <div className="bg-white p-6 rounded-xl shadow-gold-lg border-2 border-gold-200 sticky top-6 h-fit min-w-[280px]">
+            <h1 className="text-3xl mb-6 text-gold font-bold text-center">
+              🏆 Score Board
+            </h1>
+            <div className="flex flex-col gap-3">
+              {match?.rounds
+                .sort((a, b) => b.score - a.score)
+                .map((round, index) => (
+                <div
+                  key={round.id}
+                  className="bg-white p-4 rounded-lg border border-gold-200 flex justify-between items-center shadow-sm hover:shadow-gold transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</span>
+                    <span className="font-semibold text-xl text-gray-800">
+                      {round.teams.team_name}
+                    </span>
+                  </div>
+                  <span className="text-3xl font-bold text-gold">
+                    {round.score}
+                  </span>
+                </div>
+              ))}
             </div>
-          ) : (
-            <p className="mt-4 text-xl text-gray-500 text-center">
-              {filteredQuestions?.length
-                ? "Click next to start!"
-                : "No questions available"}
-            </p>
-          )}
-
-          {filteredQuestions?.length && (
-            <p className="mt-4 text-md text-gray-500 text-center">
-              Questions remaining:{" "}
-              <span className="font-bold text-blue-600">
-                {filteredQuestions.length - previousQuestion.length}
-              </span>
-            </p>
-          )}
-
-          <div className="flex justify-center gap-4 mt-8">
-            <Button
-              onClick={handleNextQuestion}
-              className="bg-blue-700 text-white px-6 font-bold hover:bg-blue-600"
-            >
-              Next Question
-            </Button>
-            <Button
-              onClick={handleCheckButton}
-              className="bg-blue-700 text-white px-6 font-bold hover:bg-blue-600"
-            >
-              Check Answer
-            </Button>
-            {showAnswer && (
-              <Button
-                onClick={() => setShowCorrectAnswer(true)}
-                className="bg-green-600 text-white px-6 font-bold hover:bg-green-500"
-              >
-                Reveal Answer
-              </Button>
-            )}
           </div>
-        </div>
 
-        {/* Buzzers */}
-        <div className="bg-white p-6 rounded-xl shadow-md max-w-auto sticky top-4 h-fit">
-          <h1 className="text-5xl mb-4 text-red-600 font-bold">
-            Buzzers
-          </h1>
-          <div className="flex flex-col gap-3">
-            {buzzers?.map((buzzer) => (
-              <div
-                key={buzzer.id}
-                className="bg-gray-50 p-3 rounded-md flex flex-col border-l-4 border-red-600 shadow-sm"
-              >
-                <span className="text-xl font-semibold text-blue-600">
-                  {buzzer.teamName}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {new Date(buzzer.timestamp).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })}
-                </span>
+          {/* Main Question Area */}
+          <div className="flex-1 bg-white p-8 rounded-xl shadow-gold-lg border-2 border-gold-200">
+            {/* Logo */}
+            <div className="text-center mb-8">
+              <img
+                src={byteBattleLogo}
+                alt="ByteBattle24 Logo"
+                className="mx-auto h-32 rounded-lg shadow-gold border-2 border-gold-200"
+              />
+              <h2 className="text-2xl font-bold text-gray-800 mt-4">
+                Quiz Championship
+              </h2>
+            </div>
+
+            {currentQuestion ? (
+              <div className="text-center">
+                <div className={`${showAnswer && correctOption === 'wrong' ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-300' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'} p-8 rounded-lg border-2 mb-8 shadow-sm transition-all duration-500`}>
+                  <h3 className={`text-2xl font-bold mb-4 ${showAnswer && correctOption === 'wrong' ? 'text-red-700' : 'text-gray-800'}`}>
+                    {showAnswer && correctOption === 'wrong' ? '❌ Wrong Answer!' : '📝 Question'}
+                  </h3>
+                  <p className={`text-2xl font-semibold leading-relaxed ${showAnswer && correctOption === 'wrong' ? 'text-red-800' : 'text-gray-800'}`}>
+                    {currentQuestion.question}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {["option_a", "option_b", "option_c", "option_d"].map(
+                    (optionKey, index) => {
+                      const optionValue = currentQuestion
+                        ? currentQuestion[optionKey as keyof Question]
+                        : "";
+                      const isActive = activeOption === optionValue;
+                      const isCorrect =
+                        optionValue === currentQuestion?.correct_option;
+
+                      let buttonClass = "bg-gold hover:bg-gold-600";
+                      if (showCorrectAnswer && isCorrect) {
+                        buttonClass = "bg-green-500 hover:bg-green-600";
+                      } else if (isActive) {
+                        buttonClass = "bg-blue-500 hover:bg-blue-600";
+                      }
+
+                      return (
+                        <button
+                          key={optionKey}
+                          onClick={() =>
+                            handleCorrectOption(optionValue as string)
+                          }
+                          className={`${buttonClass} text-white text-lg h-20 rounded-lg font-bold transition-all duration-200 shadow-md border border-gold-300 flex items-center justify-center gap-3 p-4`}
+                        >
+                          <span className="font-bold text-gold w-10 h-10 bg-white rounded-md flex items-center justify-center text-xl">
+                            {String.fromCharCode(65 + index)}
+                          </span>
+                          <span className="flex-1 text-left">{optionValue}</span>
+                        </button>
+                      );
+                    }
+                  )}
+                </div>
               </div>
-            ))}
+            ) : (
+              <div className="text-center">
+                <div className="bg-gold-50 p-8 rounded-lg border border-gold-200">
+                  <p className="text-xl text-gray-700 font-medium">
+                    {filteredQuestions?.length
+                      ? "🚀 Ready to start the quiz?"
+                      : "❌ No questions available"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {filteredQuestions?.length && (
+              <div className="mt-6 text-center">
+                <div className="bg-gold-50 p-3 rounded-lg border border-gold-200 inline-block">
+                  <p className="text-gray-700 font-medium">
+                    📊 Questions remaining:{" "}
+                    <span className="font-bold text-gold text-lg">
+                      {filteredQuestions.length - previousQuestion.length}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-center gap-4 mt-8">
+              <Button
+                onClick={handleNextQuestion}
+                size="lg"
+                className="shadow-gold"
+              >
+                ⏭️ Next Question
+              </Button>
+              <Button
+                onClick={handleCheckButton}
+                variant="secondary"
+                size="lg"
+              >
+                ✅ Check Answer
+              </Button>
+              {showAnswer && (
+                <Button
+                  onClick={() => setShowCorrectAnswer(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                  size="lg"
+                >
+                  🎯 Reveal Answer
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Buzzers */}
+          <div className="bg-white p-6 rounded-xl shadow-gold-lg border-2 border-gold-200 sticky top-6 h-fit min-w-[280px]">
+            <h1 className="text-3xl mb-6 text-gold font-bold text-center">
+              ⚡ Buzzers
+            </h1>
+            <div className="flex flex-col gap-3 max-h-96 overflow-y-auto">
+              {buzzers?.length ? buzzers.map((buzzer, index) => (
+                <div
+                  key={buzzer.id}
+                  className="bg-gold-50 p-4 rounded-lg border border-gold-200 shadow-sm hover:shadow-gold transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-xl">🔥</span>
+                    <span className="text-lg font-semibold text-gray-800">
+                      {buzzer.teamName}
+                    </span>
+                    <span className="ml-auto text-sm bg-gold text-white px-2 py-1 rounded-full font-medium">
+                      #{index + 1}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    ⏰ {new Date(buzzer.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </span>
+                </div>
+              )) : (
+                <div className="bg-gold-50 p-6 rounded-lg border border-gold-200 text-center">
+                  <p className="text-gray-600">🤫 No buzzers yet...</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

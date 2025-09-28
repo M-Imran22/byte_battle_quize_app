@@ -1,10 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
 import useRegisterUser, {
   UserData,
   UserRegistrationData,
 } from "./useRegisterUser";
-import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { createSocket } from "../services/socket";
 
 function RegisterUser() {
   const {
@@ -14,10 +16,24 @@ function RegisterUser() {
   } = useForm<UserRegistrationData>({ resolver: zodResolver(UserData) });
 
   const mutation = useRegisterUser();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const submit = (data: UserRegistrationData) => {
-    mutation.mutate(data);
-    console.log("Data is sent to the backend.");
+    mutation.mutate(data, {
+      onSuccess: (response: any) => {
+        // Auto-login after successful registration
+        if (response.accessToken) {
+          const user = { id: 1, username: data.username, email: data.email };
+          login(response.accessToken, user);
+          createSocket();
+          navigate('/team/all_teams');
+        } else {
+          // If no token returned, redirect to login
+          navigate('/login');
+        }
+      }
+    });
   };
 
   return (

@@ -1,7 +1,13 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import logo from "../assets/logo.jpg";
 
 function Nevbar() {
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
   return (
     <nav className="bg-white shadow-lg border-b-4 border-gold fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-8 py-4">
@@ -34,11 +40,12 @@ function Nevbar() {
                 Questions
               </span>
             </Link>
-            <Link to="/teams">
-              <span className="text-lg font-medium text-red-600 hover:text-red-700 transition-colors duration-200 hover:scale-105 transform">
-                Logout
-              </span>
-            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-lg font-medium text-red-600 hover:text-red-700 transition-colors duration-200 hover:scale-105 transform"
+            >
+              Logout ({user?.username})
+            </button>
           </div>
         </div>
       </div>

@@ -13,10 +13,12 @@ export type UserRegistrationData = z.infer<typeof UserData>;
 const useRegisterUser = () => {
   return useMutation({
     mutationFn: async (data: UserRegistrationData) => {
-      await axios.post("/register", data);
+      const response = await axios.post("/register", data);
+      return response.data; // Return the response data
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       console.log("User added successfuly.");
+      // Don't handle navigation here, let component handle it
     },
     onError: (error) => {
       console.log(error.message);

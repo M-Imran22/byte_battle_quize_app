@@ -3,7 +3,14 @@ import { Link } from "react-router-dom";
 import useDeleteTeam from "../hooks/useDeleteTeam";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableHeaderCell } from "../../components/ui/Table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHeaderCell,
+} from "../../components/ui/Table";
 import Spinner from "../../components/ui/Spinner";
 
 function AllTeams() {
@@ -11,13 +18,15 @@ function AllTeams() {
   const { mutate: deleteTeam } = useDeleteTeam();
 
   const handleDeleteTeam = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this team?')) {
+    if (window.confirm("Are you sure you want to delete this team?")) {
       deleteTeam(id, {
         onSuccess: () => {
           console.log(`Team with ID ${id} has been deleted successfully.`);
         },
         onError: (error: any) => {
-          console.error(`Failed to delete team with ID ${id}. ${error.message}`);
+          console.error(
+            `Failed to delete team with ID ${id}. ${error.message}`
+          );
         },
       });
     }
@@ -26,7 +35,7 @@ function AllTeams() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-64">
-        <Spinner size="xl" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -46,7 +55,9 @@ function AllTeams() {
       <Card className="shadow-gold border-2 border-gold-200">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">🏆 Team Management</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              🏆 Team Management
+            </h1>
             <p className="text-gray-600">Manage all competing teams</p>
           </div>
           <Link to="/team/add_team">
@@ -72,13 +83,19 @@ function AllTeams() {
                 {teams.map((team) => (
                   <TableRow key={team.id}>
                     <TableCell>
-                      <span className="font-semibold text-gold">#{team.id}</span>
+                      <span className="font-semibold text-gold">
+                        #{team.id}
+                      </span>
                     </TableCell>
                     <TableCell>
-                      <div className="font-semibold text-gray-800">{team.team_name}</div>
+                      <div className="font-semibold text-gray-800">
+                        {team.team_name}
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-gray-600 max-w-xs truncate">{team.description}</div>
+                      <div className="text-gray-600 max-w-xs truncate">
+                        {team.description}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
@@ -104,12 +121,14 @@ function AllTeams() {
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🏆</div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No teams yet</h3>
-            <p className="text-gray-600 mb-6">Create your first team to get started</p>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              No teams yet
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Create your first team to get started
+            </p>
             <Link to="/team/add_team">
-              <Button>
-                Create First Team
-              </Button>
+              <Button>Create First Team</Button>
             </Link>
           </div>
         )}

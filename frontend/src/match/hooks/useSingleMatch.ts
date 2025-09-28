@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "../../services/axios";
 import { Round } from "./useAllMatches";
-import { useEffect } from "react";
-import io from "socket.io-client";
 
 interface Match {
   id: number;
@@ -23,23 +21,15 @@ const fetchSingleMatch = async (id: string | undefined): Promise<Match> => {
 
 const useSingleMatch = (id: string | undefined) => {
   const queryClient = useQueryClient();
-  useEffect(() => {
-    const socket = io("http://localhost:3000"); // Adjust URL as needed
-
-    socket.on("scoreUpdate", () => {
-      queryClient.invalidateQueries({ queryKey: ["match", id] }); // Refresh data
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [queryClient]);
-
-  const { data, isError, isLoading } = useQuery<Match, Error>({
-    queryKey: ["match", id], // Include `id` in the query key for proper caching
+  
+  // Return refetch function for external use
+  const queryResult = useQuery<Match, Error>({
+    queryKey: ["match", id],
     queryFn: () => fetchSingleMatch(id),
-    enabled: !!id, // Only run the query if `id` is defined
+    enabled: !!id,
   });
+
+  const { data, isError, isLoading, refetch } = queryResult;
 
   const mutation = useMutation({
     mutationFn: async (updatedRounds: Round[]) => {
@@ -58,7 +48,7 @@ const useSingleMatch = (id: string | undefined) => {
     },
   });
 
-  return { mutation, data, isError, isLoading };
+  return { mutation, data, isError, isLoading, refetch };
 };
 
 export default useSingleMatch;

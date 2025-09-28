@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../services/axios";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
@@ -20,10 +20,7 @@ const useAddQuestion = () => {
   return useMutation({
     mutationFn: async (data: questionDataFormat) => {
       questionData.parse(data);
-      const response = await axios.post(
-        "http://localhost:3000/api/question/add",
-        data
-      );
+      const response = await axios.post("/question/add", data);
       return response;
     },
     onSuccess: (response) => {
