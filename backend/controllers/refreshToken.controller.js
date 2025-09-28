@@ -15,8 +15,8 @@ const handleRefreshToken = async (req, res) => {
         where: { refresh_token: refreshToken },
     });
 
-    console.log(founUser.username);
     if (!founUser) return res.status(403);
+    console.log(founUser.username);
 
     jwt.verify(
         refreshToken,

@@ -84,7 +84,7 @@ exports.editQuestion = async (req, res) => {
     const question = await db.Question.findByPk(questionId)
 
     if (!question) {
-      res.status(404).json({ error: "Question not found" })
+      return res.status(404).json({ error: "Question not found" })
     } else {
       res.status(200).json({ question })
     }
@@ -107,7 +107,7 @@ exports.updateQuestion = async (req, res) => {
     const questionInDB = await db.Question.findByPk(questionId)
 
     if (!questionInDB) {
-      res.status(404).json({ error: "Question not found" })
+      return res.status(404).json({ error: "Question not found" })
     }
 
     const updatedFields = {

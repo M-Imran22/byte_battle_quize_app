@@ -10,7 +10,7 @@ const handleLogin = async (req, res) => {
 
         if (!user) {
             console.log("User not found");
-            return res.statuss(401).json({ message: "Invalid credentials." });
+            return res.status(401).json({ message: "Invalid credentials." });
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);

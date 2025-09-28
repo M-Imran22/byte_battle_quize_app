@@ -30,7 +30,7 @@ exports.getBuzzerQueue = async (req, res) => {
 
 exports.deleteAllBuzzers = async (req, res) => {
     try {
-        db.BuzzerPress.destroy({
+        await db.BuzzerPress.destroy({
             where: {},
             truncate: true,
         });
