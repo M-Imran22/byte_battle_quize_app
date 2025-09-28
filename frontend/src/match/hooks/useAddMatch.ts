@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../services/axios";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 
@@ -18,10 +18,7 @@ const useAddMatch = () => {
     mutationFn: async (data: matchDataFormat) => {
       matchData.parse(data);
 
-      const response = await axios.post(
-        "http://localhost:3000/api/match/add",
-        data
-      );
+      const response = await axios.post("/match/add", data);
       return response;
     },
     onSuccess: (response) => {

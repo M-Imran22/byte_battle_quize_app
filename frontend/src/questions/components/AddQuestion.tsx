@@ -30,14 +30,22 @@ const AddQuestion = () => {
         <form onSubmit={handleSubmit(submit)} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Question Type</label>
-            <input
-              type="text"
-              placeholder="e.g., General Knowledge, English, Computer Science"
+            <select
               {...register("q_type", {
                 required: "Question type is required",
               })}
               className={`input-field text-lg py-4 ${errors.q_type ? 'border-red-500' : ''}`}
-            />
+            >
+              <option value="">Select question type</option>
+              <option value="General Knowledge">General Knowledge</option>
+              <option value="English">English</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Science">Science</option>
+              <option value="History">History</option>
+              <option value="Geography">Geography</option>
+              <option value="Sports">Sports</option>
+            </select>
             {errors.q_type && (
               <p className="mt-1 text-sm text-red-600">{errors.q_type.message}</p>
             )}

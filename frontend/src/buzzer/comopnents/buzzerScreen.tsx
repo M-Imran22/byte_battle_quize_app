@@ -1,8 +1,9 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { io } from 'socket.io-client';
+import axios from "../../services/axios";
 import useBuzzerMutation, {
   TeamFormData,
   teamSchema,
@@ -12,7 +13,36 @@ const BuzzerPage = () => {
   const [showBuzzer, setShowBuzzer] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const [teamName, setTeamName] = useState("");
+  const [matchTeams, setMatchTeams] = useState<any[]>([]);
   const { mutateAsync } = useBuzzerMutation();
+
+  // Fetch all teams for buzzer selection
+  useEffect(() => {
+    const fetchAllTeams = async () => {
+      try {
+        // Fetch all teams from the public endpoint
+        const response = await fetch('http://192.168.100.4:3000/api/public/teams');
+        if (response.ok) {
+          const data = await response.json();
+          setMatchTeams(data.teams || []);
+        } else {
+          // Fallback teams if API fails
+          setMatchTeams([
+            { id: 1, team_name: 'codecrafter' },
+            { id: 2, team_name: 'Legend Coder' }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching teams:', error);
+        // Fallback teams
+        setMatchTeams([
+          { id: 1, team_name: 'codecrafter' },
+          { id: 2, team_name: 'Legend Coder' }
+        ]);
+      }
+    };
+    fetchAllTeams();
+  }, []);
 
   const {
     register,
@@ -71,12 +101,17 @@ const BuzzerPage = () => {
             
             <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
               <div>
-                <input
+                <select
                   {...register("teamName")}
-                  placeholder="Enter team name"
-                  className="w-full px-4 py-4 bg-white/20 border border-white/30 text-white placeholder-gray-300 text-lg rounded-lg focus:border-gold focus:ring-4 focus:ring-gold-100 transition-all duration-200"
-                  autoComplete="off"
-                />
+                  className="w-full px-4 py-4 bg-white/20 border border-white/30 text-white text-lg rounded-lg focus:border-gold focus:ring-4 focus:ring-gold-100 transition-all duration-200"
+                >
+                  <option value="" className="bg-gray-800 text-white">Select your team</option>
+                  {matchTeams.map((team) => (
+                    <option key={team.id} value={team.team_name} className="bg-gray-800 text-white">
+                      {team.team_name}
+                    </option>
+                  ))}
+                </select>
                 {errors.teamName && (
                   <p className="mt-2 text-red-400 text-sm">{errors.teamName.message}</p>
                 )}

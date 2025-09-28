@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import axios from "../../services/axios";
 import { z } from "zod";
 
 export const teamdata = z.object({
@@ -13,10 +13,7 @@ const useAddTeam = () => {
   return useMutation({
     mutationFn: async (data: TeamAdditionData) => {
       teamdata.parse(data);
-      const response = await axios.post(
-        "http://localhost:3000/api/team/add",
-        data
-      );
+      const response = await axios.post("/team/add", data);
       return response;
     },
 

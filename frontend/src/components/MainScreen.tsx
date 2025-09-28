@@ -19,7 +19,10 @@ function MainScreen() {
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const [activeOption, setActiveOption] = useState<string | null>(null);
   const [backgroundColor, setBackgroundColor] = useState("white");
+  const [timer, setTimer] = useState<number | null>(null);
+  const [timerActive, setTimerActive] = useState(false);
   let timeoutId: NodeJS.Timeout | null = null;
+  let timerInterval: NodeJS.Timeout | null = null;
 
   useEffect(() => {
     const socket = getSocket() || createSocket();
@@ -28,11 +31,31 @@ function MainScreen() {
     // Listen for real-time buzzer presses
     socket.on('buzzer-pressed', () => {
       refetchBuzzers();
+      // Start timer on first buzzer press
+      if (!timerActive) {
+        setTimer(30);
+        setTimerActive(true);
+        
+        timerInterval = setInterval(() => {
+          setTimer((prev) => {
+            if (prev === null || prev <= 1) {
+              setTimerActive(false);
+              if (timerInterval) clearInterval(timerInterval);
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
     });
 
     // Listen for buzzer resets
     socket.on('buzzers-reset', () => {
       refetchBuzzers();
+      // Reset timer
+      setTimer(null);
+      setTimerActive(false);
+      if (timerInterval) clearInterval(timerInterval);
     });
 
     // Listen for score updates
@@ -44,6 +67,7 @@ function MainScreen() {
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
+      if (timerInterval) clearInterval(timerInterval);
       if (socket) {
         socket.off('buzzer-pressed');
         socket.off('buzzers-reset');
@@ -141,6 +165,12 @@ function MainScreen() {
 
   const handleCheckButton = () => {
     if (activeOption === null) return;
+    
+    // Stop timer when answer is checked
+    setTimer(null);
+    setTimerActive(false);
+    if (timerInterval) clearInterval(timerInterval);
+    
     if (correctOption === "correct") {
       setShowCorrectAnswer(true);
       displayCelebration();
@@ -167,7 +197,7 @@ function MainScreen() {
         }
       `}</style>
       <div
-        className={`min-h-screen p-6 bg-gradient-to-br from-gold-50 via-white to-gold-100`}
+        className={`min-h-screen p-6 ${timer !== null && timer <= 5 && timerActive ? 'bg-red-500 animate-pulse' : 'bg-gradient-to-br from-gold-50 via-white to-gold-100'} transition-all duration-500`}
         style={{ backgroundColor: backgroundColor !== 'white' ? backgroundColor : undefined }}
       >
         <div className="flex justify-between gap-6 h-full">
@@ -214,11 +244,9 @@ function MainScreen() {
 
             {currentQuestion ? (
               <div className="text-center">
-                <div className={`${showAnswer && correctOption === 'wrong' ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-300' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'} p-8 rounded-lg border-2 mb-8 shadow-sm transition-all duration-500`}>
-                  <h3 className={`text-2xl font-bold mb-4 ${showAnswer && correctOption === 'wrong' ? 'text-red-700' : 'text-gray-800'}`}>
-                    {showAnswer && correctOption === 'wrong' ? '❌ Wrong Answer!' : '📝 Question'}
-                  </h3>
-                  <p className={`text-2xl font-semibold leading-relaxed ${showAnswer && correctOption === 'wrong' ? 'text-red-800' : 'text-gray-800'}`}>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg border-2 border-blue-200 mb-8 shadow-sm">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-4">📝 Question</h3>
+                  <p className="text-2xl text-gray-800 font-semibold leading-relaxed">
                     {currentQuestion.question}
                   </p>
                 </div>
@@ -236,6 +264,8 @@ function MainScreen() {
                       let buttonClass = "bg-gold hover:bg-gold-600";
                       if (showCorrectAnswer && isCorrect) {
                         buttonClass = "bg-green-500 hover:bg-green-600";
+                      } else if (showAnswer && correctOption === 'wrong' && isActive) {
+                        buttonClass = "bg-red-500 hover:bg-red-600";
                       } else if (isActive) {
                         buttonClass = "bg-blue-500 hover:bg-blue-600";
                       }
@@ -315,6 +345,20 @@ function MainScreen() {
             <h1 className="text-3xl mb-6 text-gold font-bold text-center">
               ⚡ Buzzers
             </h1>
+            
+            {/* Timer */}
+            {timer !== null && (
+              <div className="mb-6 text-center">
+                <div className={`inline-block px-6 py-3 rounded-lg font-bold text-3xl ${timer <= 5 && timerActive ? 'bg-red-600 text-white border-2 border-red-800 animate-bounce' : timer <= 10 ? 'bg-red-100 text-red-700 border-2 border-red-300' : 'bg-blue-100 text-blue-700 border-2 border-blue-300'}`}>
+                  {timer <= 5 && timerActive ? '🚨' : '⏰'} {timer}s
+                </div>
+                {timer <= 5 && timerActive && (
+                  <div className="mt-2 text-red-600 font-bold text-lg animate-pulse">
+                    ⚠️ TIME RUNNING OUT!
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex flex-col gap-3 max-h-96 overflow-y-auto">
               {buzzers?.length ? buzzers.map((buzzer, index) => (
                 <div

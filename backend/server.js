@@ -47,6 +47,12 @@ io.on("connection", (socket) => {
             return socket.emit('error', 'Invalid buzzer data');
         }
 
+        // Check if buzzers are already locked (first press happened)
+        const existingBuzzers = await db.BuzzerPress.count({ where: { status: 'pending' } });
+        if (existingBuzzers > 0) {
+            return socket.emit('error', 'Buzzers are locked - first team already buzzed!');
+        }
+
         lastBuzzerPress = now;
         console.log('Buzzer pressed:', data);
         
@@ -57,6 +63,9 @@ io.on("connection", (socket) => {
                 timestamp: data.timestamp,
                 status: 'pending'
             });
+            
+            // Lock all other buzzers
+            io.emit('buzzers-locked', { firstTeam: data.teamName });
         } catch (error) {
             console.error('Error saving buzzer press:', error);
         }
@@ -119,6 +128,15 @@ app.use(express.urlencoded({ extended: false }))
 app.use("/api/register", registerRouter)
 app.use("/api/login", loginTouter)
 app.use("/api/refresh_token", refreshTokenRouter)
+// Public endpoint for buzzer teams
+app.get('/api/public/teams', async (req, res) => {
+    try {
+        const teams = await db.Team.findAll();
+        res.json({ teams });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch teams' });
+    }
+});
 app.use("/api/team", verifyAccessToken, teamRouter)
 app.use("/api/match", verifyAccessToken, matchRouter)
 app.use("/api/question", verifyAccessToken, questionRouter)
