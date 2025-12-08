@@ -83,12 +83,20 @@ export const AllQuestions = () => {
               </select>
             </div>
             
-            <Link to="/question/add_question">
-              <Button size="lg" className="shadow-gold whitespace-nowrap">
-                <span className="mr-2">+</span>
-                Add Question
-              </Button>
-            </Link>
+            <div className="flex gap-3">
+              <Link to="/question/add_question">
+                <Button size="lg" className="shadow-gold whitespace-nowrap">
+                  <span className="mr-2">+</span>
+                  Add Question
+                </Button>
+              </Link>
+              <Link to="/question/ai_generator">
+                <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg whitespace-nowrap">
+                  <span className="mr-2">🤖</span>
+                  AI Generator
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 

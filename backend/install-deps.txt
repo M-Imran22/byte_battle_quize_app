@@ -1,0 +1,6 @@
+Run these commands in the backend directory:
+
+npm install @huggingface/inference cheerio pdf-parse multer
+npm install --save-dev @types/multer
+
+Then restart the backend server.

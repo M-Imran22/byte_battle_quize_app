@@ -21,12 +21,12 @@ function MainScreen() {
   const [backgroundColor, setBackgroundColor] = useState("white");
   const [timer, setTimer] = useState<number | null>(null);
   const [timerActive, setTimerActive] = useState(false);
-  let timeoutId: NodeJS.Timeout | null = null;
-  let timerInterval: NodeJS.Timeout | null = null;
 
   useEffect(() => {
     const socket = getSocket() || createSocket();
     if (!socket) return;
+
+    let timerInterval: NodeJS.Timeout | null = null;
 
     // Listen for real-time buzzer presses
     socket.on('buzzer-pressed', () => {
@@ -35,46 +35,47 @@ function MainScreen() {
       if (!timerActive) {
         setTimer(30);
         setTimerActive(true);
-        
-        timerInterval = setInterval(() => {
-          setTimer((prev) => {
-            if (prev === null || prev <= 1) {
-              setTimerActive(false);
-              if (timerInterval) clearInterval(timerInterval);
-              return null;
-            }
-            return prev - 1;
-          });
-        }, 1000);
       }
     });
 
     // Listen for buzzer resets
     socket.on('buzzers-reset', () => {
       refetchBuzzers();
-      // Reset timer
       setTimer(null);
       setTimerActive(false);
-      if (timerInterval) clearInterval(timerInterval);
     });
 
     // Listen for score updates
     socket.on('scores-updated', (data: any) => {
       if (data.matchId === id) {
-        refetchMatch(); // Refetch match data when scores update
+        refetchMatch();
       }
     });
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
       if (timerInterval) clearInterval(timerInterval);
-      if (socket) {
-        socket.off('buzzer-pressed');
-        socket.off('buzzers-reset');
-        socket.off('scores-updated');
-      }
+      socket.off('buzzer-pressed');
+      socket.off('buzzers-reset');
+      socket.off('scores-updated');
     };
-  }, [refetchBuzzers, refetchMatch, id]);
+  }, [refetchBuzzers, refetchMatch, id, timerActive]);
+
+  // Separate timer countdown effect
+  useEffect(() => {
+    if (!timerActive || timer === null) return;
+
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev === null || prev <= 1) {
+          setTimerActive(false);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerActive, timer]);
 
   // Filter questions by match type (if applicable)
   const filteredQuestions = match?.match_type
@@ -169,7 +170,6 @@ function MainScreen() {
     // Stop timer when answer is checked
     setTimer(null);
     setTimerActive(false);
-    if (timerInterval) clearInterval(timerInterval);
     
     if (correctOption === "correct") {
       setShowCorrectAnswer(true);
@@ -177,7 +177,6 @@ function MainScreen() {
       setBackgroundColor("white");
     } else {
       setShowAnswer(true);
-      // Keep white background, show wrong answer styling on question area
     }
   };
 

@@ -1,0 +1,7 @@
+Add these to package.json dependencies:
+"@huggingface/inference": "^2.6.4",
+"cheerio": "^1.0.0-rc.12",
+"pdf-parse": "^1.1.1",
+"axios": "^1.6.0"
+
+Run: npm install @huggingface/inference cheerio pdf-parse axios

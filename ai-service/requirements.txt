@@ -1,0 +1,6 @@
+torch
+transformers
+flask
+flask-cors
+datasets
+accelerate

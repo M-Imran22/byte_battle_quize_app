@@ -1,21 +1,21 @@
 {
   "development": {
     "username": "root",
-    "password": null,
+    "password": "",
     "database": "bb_quizapp",
     "host": "localhost",
     "dialect": "mysql"
   },
   "test": {
     "username": "root",
-    "password": null,
+    "password": "",
     "database": "bb_quizapp",
     "host": "localhost",
     "dialect": "mysql"
   },
   "production": {
     "username": "root",
-    "password": null,
+    "password": "",
     "database": "bb_quizapp",
     "host": "localhost",
     "dialect": "mysql"

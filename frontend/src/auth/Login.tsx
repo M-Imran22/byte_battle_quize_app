@@ -25,6 +25,10 @@ function Login() {
         login(token, user);
         createSocket(); // Create socket connection after login
         navigate('/team/all_teams');
+      },
+      onError: (error: any) => {
+        console.error('Login error:', error);
+        // Error is already handled by the useLogin hook
       }
     });
   };
@@ -65,11 +69,20 @@ function Login() {
               )}
             </div>
             
+            {mutation.error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">
+                  {mutation.error?.response?.data?.message || 'Login failed. Please try again.'}
+                </p>
+              </div>
+            )}
+            
             <button
               type="submit"
-              className="btn-primary w-full py-3 text-lg"
+              disabled={mutation.isPending}
+              className="btn-primary w-full py-3 text-lg disabled:opacity-50"
             >
-              Sign In
+              {mutation.isPending ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
           

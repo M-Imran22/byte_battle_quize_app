@@ -47,12 +47,6 @@ io.on("connection", (socket) => {
             return socket.emit('error', 'Invalid buzzer data');
         }
 
-        // Check if buzzers are already locked (first press happened)
-        const existingBuzzers = await db.BuzzerPress.count({ where: { status: 'pending' } });
-        if (existingBuzzers > 0) {
-            return socket.emit('error', 'Buzzers are locked - first team already buzzed!');
-        }
-
         lastBuzzerPress = now;
         console.log('Buzzer pressed:', data);
         
@@ -63,9 +57,6 @@ io.on("connection", (socket) => {
                 timestamp: data.timestamp,
                 status: 'pending'
             });
-            
-            // Lock all other buzzers
-            io.emit('buzzers-locked', { firstTeam: data.teamName });
         } catch (error) {
             console.error('Error saving buzzer press:', error);
         }
@@ -101,6 +92,7 @@ const db = require('./models')
 const buzzerRouter = require("./routes/buzzer.route")
 const teamRouter = require("./routes/team.route")
 const questionRouter = require('./routes/question.route')
+const aiQuestionRouter = require('./routes/aiQuestion.route')
 const matchRouter = require('./routes/match.route')
 const registerRouter = require("./routes/register.route")
 const loginTouter = require("./routes/auth.route")
@@ -140,6 +132,7 @@ app.get('/api/public/teams', async (req, res) => {
 app.use("/api/team", verifyAccessToken, teamRouter)
 app.use("/api/match", verifyAccessToken, matchRouter)
 app.use("/api/question", verifyAccessToken, questionRouter)
+app.use("/api/ai-question", verifyAccessToken, aiQuestionRouter)
 app.use("/api/buzzer", verifyAccessToken, buzzerRouter)
 db.sequelize.sync().then(() => {
 
