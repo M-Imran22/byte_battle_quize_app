@@ -22,3 +22,30 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# backend
+
+# Dependencies
+bakcend/node_modules/
+
+# Environment variables
+bakcend/.env
+bakcend/.env.local
+bakcend/.env.*.local
+
+# Logs
+bakcend/logs/
+bakcend/*.log
+bakcend/npm-debug.log*
+
+# OS files
+bakcend/.DS_Store
+bakcend/Thumbs.db
+
+# IDE
+bakcend/.vscode/
+bakcend/.idea/
+
+# Build
+bakcend/dist/
+bakcend/build/
