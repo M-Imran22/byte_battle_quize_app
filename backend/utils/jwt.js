@@ -25,6 +25,7 @@ const verifyAccessToken = (req, res, next) => {
         if (error) {
             return res.status(403).json({ message: "Forbidden" });
         }
+        req.user = { id: decode.id };
         req.id = decode.id;
         next();
     });

@@ -3,6 +3,7 @@ const db = require("../models");
 exports.createQuestion = async (req, res) => {
   try {
     const { question, option_a, option_b, option_c, option_d, correct_option, q_type } = req.body;
+    const user_id = req.user.id;
 
     // Validate the incoming data
     if (!question || !option_a || !option_b || !option_c || !option_d || !correct_option || !q_type) {
@@ -18,7 +19,8 @@ exports.createQuestion = async (req, res) => {
       option_b,
       option_c,
       option_d,
-      correct_option
+      correct_option,
+      user_id
     });
 
     res.status(201).json({ message: "Question inserted successfully!" });
@@ -30,7 +32,10 @@ exports.createQuestion = async (req, res) => {
 
 exports.getAllQuestions = async (req, res) => {
   try {
-    const { count, rows: questions } = await db.Question.findAndCountAll({});
+    const user_id = req.user.id;
+    const { count, rows: questions } = await db.Question.findAndCountAll({
+      where: { user_id }
+    });
     res.status(200).json({ count, questions });
   } catch (error) {
     console.error("Error fetching questions:", error);
@@ -40,8 +45,10 @@ exports.getAllQuestions = async (req, res) => {
 
 exports.getAllQuestionType = async (req, res) => {
   try {
-    // SELECT DISTINCT q_type FROM questions
+    const user_id = req.user.id;
+    // SELECT DISTINCT q_type FROM questions WHERE user_id = ?
     const questionTypes = await db.Question.findAll({
+      where: { user_id },
       attributes: [
         [db.sequelize.fn('DISTINCT', db.sequelize.col('q_type')),
           'question_type']

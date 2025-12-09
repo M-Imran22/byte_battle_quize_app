@@ -13,12 +13,19 @@ module.exports = (sequelize,DataTypes)=>{
             },
             team_name:{
                 type:DataTypes.STRING,
-                allowNull: false,
-                unique: true
+                allowNull: false
             },
             description:{
                 type:DataTypes.STRING,
                 allowNull: false
+            },
+            user_id:{
+                type:DataTypes.INTEGER,
+                allowNull: false,
+                references: {
+                    model: 'Users',
+                    key: 'id'
+                }
             }
         }
     )
@@ -27,6 +34,10 @@ module.exports = (sequelize,DataTypes)=>{
         Team.hasMany(models.Team_Match,{
             foreignKey:"team_id",
             as:"rounds"
+        })
+        Team.belongsTo(models.User, {
+            foreignKey: "user_id",
+            as: "user"
         })
     }
 

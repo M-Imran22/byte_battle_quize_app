@@ -4,6 +4,7 @@ const db = require("../models");
 exports.createTeam = async (req, res) => {
     try {
         const { team_name, description } = req.body;
+        const user_id = req.user.id;
 
         // Validate input
         if (!team_name || !description) {
@@ -13,7 +14,8 @@ exports.createTeam = async (req, res) => {
         // Create the team
         const newTeam = await db.Team.create({
             team_name,
-            description
+            description,
+            user_id
         });
 
         res.status(201).json({ message: "Team added successfully!", team: newTeam });
@@ -25,7 +27,10 @@ exports.createTeam = async (req, res) => {
 
 exports.getAllTeams = async (req, res) => {
     try {
-        const { count, rows: teams } = await db.Team.findAndCountAll({});
+        const user_id = req.user.id;
+        const { count, rows: teams } = await db.Team.findAndCountAll({
+            where: { user_id }
+        });
         res.status(200).json({ teams })
     } catch (error) {
         console.error("Error fetching teams: ", error);

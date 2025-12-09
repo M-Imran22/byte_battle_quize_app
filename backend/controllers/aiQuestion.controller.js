@@ -273,10 +273,11 @@ exports.generateQuestionsFromContent = async (req, res) => {
         );
         
         // Filter out potential duplicates
+        const user_id = req.user.id;
         const uniqueQuestions = [];
         const existingQuestions = await db.Question.findAll({
             attributes: ['question'],
-            where: { q_type: questionType.toLowerCase() }
+            where: { q_type: questionType.toLowerCase(), user_id }
         });
         
         const existingTexts = existingQuestions.map(q => q.question.toLowerCase());
@@ -305,7 +306,8 @@ exports.generateQuestionsFromContent = async (req, res) => {
                     option_b: q.option_b,
                     option_c: q.option_c,
                     option_d: q.option_d,
-                    correct_option: q.correct_option
+                    correct_option: q.correct_option,
+                    user_id
                 });
                 savedQuestions.push(savedQuestion);
             } catch (error) {

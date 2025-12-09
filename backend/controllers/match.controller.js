@@ -4,6 +4,7 @@ const { model } = require("mongoose");
 
 exports.createMatch = async (req, res) => {
     const { match_name, match_type, team_ids } = req.body;
+    const user_id = req.user.id;
 
     // Validate input data
     if (!match_name || !match_type || !Array.isArray(team_ids) || team_ids.length === 0) {
@@ -11,17 +12,17 @@ exports.createMatch = async (req, res) => {
     }
 
     try {
-        // Check if the teams exist in the database
-        const existingTeams = await db.Team.findAll({ where: { id: team_ids } });
+        // Check if the teams exist and belong to the user
+        const existingTeams = await db.Team.findAll({ where: { id: team_ids, user_id } });
 
-        // If some teams don't exist, return error
+        // If some teams don't exist or don't belong to user, return error
         if (existingTeams.length !== team_ids.length) {
-            return res.status(400).json({ error: "Some teams do not exist in the database." });
+            return res.status(400).json({ error: "Some teams do not exist or don't belong to you." });
         }
 
         // Create a new match record
         const matchType = match_type.toLowerCase();
-        const newMatch = await db.Match.create({ match_name, match_type: matchType });
+        const newMatch = await db.Match.create({ match_name, match_type: matchType, user_id });
 
         // Create entries in the Team_Match table for each team participating in the match
         const teamMatchEntries = team_ids.map((team_id) => ({
@@ -82,8 +83,10 @@ exports.updateScore = async (req, res) => {
 
 exports.getAllMatches = async (req, res) => {
     try {
+        const user_id = req.user.id;
         // Fetch all matches along with associated teams and their scores
         const { count, rows: matches } = await db.Match.findAndCountAll({
+            where: { user_id },
             include: [
                 {
                     model: db.Team_Match,

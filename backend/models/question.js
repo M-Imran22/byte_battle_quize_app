@@ -7,8 +7,7 @@ module.exports = (sequelize, DataTypes) => {
         "Question", {
         question: {
             type: DataTypes.STRING,
-            allowNull: false,
-            unique: true
+            allowNull: false
         },
         option_a: {
             type: DataTypes.STRING,
@@ -33,8 +32,24 @@ module.exports = (sequelize, DataTypes) => {
         q_type: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        user_id:{
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'Users',
+                key: 'id'
+            }
         }
     }
     )
+    
+    Question.associate = (models) => {
+        Question.belongsTo(models.User, {
+            foreignKey: "user_id",
+            as: "user"
+        })
+    }
+    
     return Question;
 }

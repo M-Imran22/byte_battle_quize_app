@@ -120,10 +120,26 @@ app.use(express.urlencoded({ extended: false }))
 app.use("/api/register", registerRouter)
 app.use("/api/login", loginTouter)
 app.use("/api/refresh_token", refreshTokenRouter)
-// Public endpoint for buzzer teams
-app.get('/api/public/teams', async (req, res) => {
+// Public endpoint for buzzer teams (by match)
+app.get('/api/public/teams/:matchId', async (req, res) => {
     try {
-        const teams = await db.Team.findAll();
+        const { matchId } = req.params;
+        const match = await db.Match.findByPk(matchId, {
+            include: [{
+                model: db.Team_Match,
+                as: 'rounds',
+                include: [{
+                    model: db.Team,
+                    as: 'teams'
+                }]
+            }]
+        });
+        
+        if (!match) {
+            return res.status(404).json({ error: 'Match not found' });
+        }
+        
+        const teams = match.rounds.map(r => r.teams);
         res.json({ teams });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch teams' });
