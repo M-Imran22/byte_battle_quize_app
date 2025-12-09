@@ -21,10 +21,10 @@ function Login() {
     mutation.mutate(data, {
       onSuccess: (response: any) => {
         const token = response.accessToken;
-        const user = { id: 1, username: "User", email: data.email };
+        const user = response.user || { id: 1, username: "User", email: data.email };
         login(token, user);
         createSocket();
-        navigate("/team/all_teams");
+        navigate("/dashboard");
       },
       onError: (error: any) => {
         console.error("Login error:", error);

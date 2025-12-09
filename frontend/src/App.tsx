@@ -19,6 +19,7 @@ import Scoreboard from "./match/components/Scoreboard";
 import EditMatch from "./match/components/EditMatch";
 import MainScreen from "./components/MainScreen";
 import BuzzerPage from "./buzzer/comopnents/buzzerScreen";
+import Dashboard from "./components/Dashboard";
 
 function App() {
   return (
@@ -30,7 +31,7 @@ function App() {
         <Route path="/buzzer/buzzer_screen" element={<BuzzerPage />} />
         <Route path="/match/:id/quiz" element={<MainScreen />} />
         <Route element={<ProtectedRoute><LayOut /></ProtectedRoute>}>
-
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/timer" element={<Timer />} />
           <Route path="/team">
             <Route path="add_team" element={<AddTeam />} />

@@ -27,7 +27,7 @@ function RegisterUser() {
           const user = { id: 1, username: data.username, email: data.email };
           login(response.accessToken, user);
           createSocket();
-          navigate("/team/all_teams");
+          navigate("/dashboard");
         } else {
           navigate("/login");
         }
