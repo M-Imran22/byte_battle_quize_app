@@ -1,14 +1,25 @@
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import useEditQuestion from "../hooks/useEditQuestion";
+import useAllQuestoin_type from "../hooks/useAllQuestion_type";
 import { useEffect } from "react";
-import { questionDataFormat } from "../hooks/useAddQuestion";
+// Question data format interface
+export interface questionDataFormat {
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: string;
+  q_type: string;
+}
 import Button from "../../components/ui/Button";
 import Spinner from "../../components/ui/Spinner";
 
 const EditQuestion = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { data: q_types } = useAllQuestoin_type();
 
   const {
     handleSubmit,
@@ -115,6 +126,31 @@ const EditQuestion = () => {
                 </div>
               )
             )}
+
+            <div>
+              <label className="block font-bold text-gray-700 mb-2">
+                Question Type
+              </label>
+              <select
+                defaultValue={question?.q_type}
+                {...register("q_type", {
+                  required: "Question type is required",
+                })}
+                className="input-field"
+              >
+                <option value="">Select question type</option>
+                {q_types?.map((type) => (
+                  <option key={type.question_type} value={type.question_type}>
+                    {type.question_type}
+                  </option>
+                ))}
+              </select>
+              {errors.q_type && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.q_type?.message}
+                </p>
+              )}
+            </div>
 
             <div>
               <label className="block font-bold text-gray-700 mb-2">

@@ -1,6 +1,15 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "../../services/axios";
-import { questionDataFormat } from "./useAddQuestion";
+// Question data format interface
+interface questionDataFormat {
+  question: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: string;
+  q_type: string;
+}
 
 const fetchQuestion = async (id: string) => {
   const response = await axios.get(`/question/${id}/edit`);
@@ -20,16 +29,15 @@ const useEditQuestion = (id: string | undefined, onSuccess: () => void) => {
 
   const mutation = useMutation({
     mutationFn: async (data: questionDataFormat) => {
-      const questionData = new FormData();
-
-      questionData.append("question", data.question);
-      questionData.append("option_a", data.option_a);
-      questionData.append("option_b", data.option_b);
-      questionData.append("option_c", data.option_c);
-      questionData.append("option_d", data.option_d);
-      questionData.append("correct_option", data.correct_option);
-
-      const response = await axios.put(`question/${id}`, questionData);
+      const response = await axios.put(`question/${id}`, {
+        question: data.question,
+        option_a: data.option_a,
+        option_b: data.option_b,
+        option_c: data.option_c,
+        option_d: data.option_d,
+        correct_option: data.correct_option,
+        q_type: data.q_type
+      });
       return response;
     },
     onSuccess: () => {
