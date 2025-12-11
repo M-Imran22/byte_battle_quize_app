@@ -7,7 +7,7 @@ import LayOut from "./Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddMatch from "./match/components/AddMatch";
 import AddQuestion from "./questions/components/AddQuestion";
-import AIQuestionGenerator from "./questions/components/AIQuestionGenerator";
+import ExcelQuestionImporter from "./questions/components/ExcelQuestionImporter";
 import Timer from "./components/Timer";
 import AddTeam from "./teams/components/AddTeam";
 import AllTeams from "./teams/components/AllTeams";
@@ -40,7 +40,7 @@ function App() {
           </Route>
           <Route path="/question">
             <Route path="add_question" element={<AddQuestion />} />
-            <Route path="ai_generator" element={<AIQuestionGenerator />} />
+            <Route path="excel_import" element={<ExcelQuestionImporter />} />
             <Route path="all_questions" element={<AllQuestions />} />
             <Route path=":id/edit" element={<EditQuestion />} />
           </Route>

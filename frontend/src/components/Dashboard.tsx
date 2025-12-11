@@ -66,9 +66,9 @@ function Dashboard() {
       color: "bg-yellow-500 hover:bg-yellow-600",
     },
     {
-      label: "AI Generator",
-      icon: "🤖",
-      link: "/question/ai_generator",
+      label: "Excel Import",
+      icon: "📊",
+      link: "/question/excel_import",
       color: "bg-yellow-600 hover:bg-yellow-700",
     },
   ];
@@ -273,9 +273,9 @@ function Dashboard() {
                 Add Manual Question
               </button>
             </Link>
-            <Link to="/question/ai_generator">
+            <Link to="/question/excel_import">
               <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white mb-2 font-semibold py-3 rounded-lg transition-all duration-200">
-                Generate with AI
+                Import from Excel
               </button>
             </Link>
           </div>

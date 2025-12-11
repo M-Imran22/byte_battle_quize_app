@@ -90,10 +90,10 @@ export const AllQuestions = () => {
                   Add Question
                 </Button>
               </Link>
-              <Link to="/question/ai_generator">
-                <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg whitespace-nowrap">
-                  <span className="mr-2">🤖</span>
-                  AI Generator
+              <Link to="/question/excel_import">
+                <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white shadow-lg whitespace-nowrap">
+                  <span className="mr-2">📊</span>
+                  Excel Import
                 </Button>
               </Link>
             </div>

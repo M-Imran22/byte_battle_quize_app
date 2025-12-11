@@ -25,6 +25,11 @@ function Nevbar() {
           </Link>
 
           <div className="flex items-center space-x-8">
+            <Link to="/dashboard">
+              <span className="text-lg font-medium text-gray-700 hover:text-gold transition-colors duration-200 hover:scale-105 transform">
+                Dashboard
+              </span>
+            </Link>
             <Link to="/team/all_teams">
               <span className="text-lg font-medium text-gray-700 hover:text-gold transition-colors duration-200 hover:scale-105 transform">
                 Teams
