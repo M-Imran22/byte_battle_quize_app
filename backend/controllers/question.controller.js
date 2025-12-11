@@ -1,34 +1,6 @@
 const db = require("../models");
 
-exports.createQuestion = async (req, res) => {
-  try {
-    const { question, option_a, option_b, option_c, option_d, correct_option, q_type } = req.body;
-    const user_id = req.user.id;
 
-    // Validate the incoming data
-    if (!question || !option_a || !option_b || !option_c || !option_d || !correct_option || !q_type) {
-      return res.status(400).json({ message: "All fields are required." });
-    }
-
-    let new_q_type = q_type.toLowerCase()
-    // Insert the new question into the database
-    await db.Question.create({
-      q_type: new_q_type,
-      question,
-      option_a,
-      option_b,
-      option_c,
-      option_d,
-      correct_option,
-      user_id
-    });
-
-    res.status(201).json({ message: "Question inserted successfully!" });
-  } catch (error) {
-    console.error("Error during question insertion:", error);
-    res.status(500).json({ message: "Failed to insert question." });
-  }
-};
 
 exports.getAllQuestions = async (req, res) => {
   try {

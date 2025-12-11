@@ -59,12 +59,7 @@ function Dashboard() {
       link: "/match/add_match",
       color: "bg-gold-600 hover:bg-gold-700",
     },
-    {
-      label: "Add Question",
-      icon: "📝",
-      link: "/question/add_question",
-      color: "bg-yellow-500 hover:bg-yellow-600",
-    },
+
     {
       label: "Excel Import",
       icon: "📊",
@@ -268,11 +263,7 @@ function Dashboard() {
               </p>
               <p className="text-gray-600 text-sm">Total Questions Available</p>
             </div>
-            <Link to="/question/add_question">
-              <button className="w-full bg-gold hover:bg-gold-600 text-white mb-2 font-semibold py-3 rounded-lg transition-all duration-200">
-                Add Manual Question
-              </button>
-            </Link>
+
             <Link to="/question/excel_import">
               <button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white mb-2 font-semibold py-3 rounded-lg transition-all duration-200">
                 Import from Excel

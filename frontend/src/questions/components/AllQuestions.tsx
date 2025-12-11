@@ -84,12 +84,7 @@ export const AllQuestions = () => {
             </div>
             
             <div className="flex gap-3">
-              <Link to="/question/add_question">
-                <Button size="lg" className="shadow-gold whitespace-nowrap">
-                  <span className="mr-2">+</span>
-                  Add Question
-                </Button>
-              </Link>
+
               <Link to="/question/excel_import">
                 <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white shadow-lg whitespace-nowrap">
                   <span className="mr-2">📊</span>
@@ -166,11 +161,11 @@ export const AllQuestions = () => {
               {SelectedType ? `No ${SelectedType} questions found` : 'No questions yet'}
             </h3>
             <p className="text-gray-600 mb-6">
-              {SelectedType ? 'Try selecting a different category' : 'Create your first question to get started'}
+              {SelectedType ? 'Try selecting a different category' : 'Import your first questions from Excel to get started'}
             </p>
-            <Link to="/question/add_question">
+            <Link to="/question/excel_import">
               <Button>
-                Create First Question
+                Import Questions from Excel
               </Button>
             </Link>
           </div>
