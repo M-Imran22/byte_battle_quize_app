@@ -49,6 +49,10 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: "user_id",
             as: "user"
         })
+        Question.hasMany(models.Match_Question, {
+            foreignKey: "question_id",
+            as: "match_questions"
+        })
     }
     
     return Question;

@@ -1,6 +1,9 @@
 import useSingleMatch from "../match/hooks/useSingleMatch";
 import { useParams } from "react-router-dom";
-import useAllQuestoins, { Question } from "../questions/hooks/uesAllQustions";
+import useCurrentQuestion from "../match/hooks/useCurrentQuestion";
+import useNextQuestion from "../match/hooks/useNextQuestion";
+import useWinner from "../match/hooks/useWinner";
+import useStartMatch from "../match/hooks/useStartMatch";
 import { useState, useEffect } from "react";
 import useAllBuzzers from "../buzzer/hooks/useAllBuzzers";
 import byteBattleLogo from "../assets/logo.jpg";
@@ -10,17 +13,21 @@ import { getSocket, createSocket } from "../services/socket";
 function MainScreen() {
   const { id } = useParams();
   const { data: match, refetch: refetchMatch } = useSingleMatch(id);
-  const { data: questions } = useAllQuestoins();
+  const { data: questionData, refetch: refetchQuestion } = useCurrentQuestion(id!);
+  const { data: winnerData } = useWinner(id!, questionData?.isComplete || false);
   const { data: buzzers, refetch: refetchBuzzers } = useAllBuzzers();
-  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [previousQuestion, setPreviousQuestion] = useState<number[]>([]);
+  const startMatchMutation = useStartMatch();
+  const nextQuestionMutation = useNextQuestion();
   const [correctOption, setCorrectOption] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
   const [activeOption, setActiveOption] = useState<string | null>(null);
-  const [backgroundColor, setBackgroundColor] = useState("white");
+
   const [timer, setTimer] = useState<number | null>(null);
   const [timerActive, setTimerActive] = useState(false);
+
+  const currentQuestion = questionData?.question;
+  const isMatchComplete = questionData?.isComplete;
 
   useEffect(() => {
     const socket = getSocket() || createSocket();
@@ -52,13 +59,21 @@ function MainScreen() {
       }
     });
 
+    // Listen for question updates
+    socket.on('question-updated', (data: any) => {
+      if (data.matchId === id) {
+        refetchQuestion();
+      }
+    });
+
     return () => {
       if (timerInterval) clearInterval(timerInterval);
       socket.off('buzzer-pressed');
       socket.off('buzzers-reset');
       socket.off('scores-updated');
+      socket.off('question-updated');
     };
-  }, [refetchBuzzers, refetchMatch, id, timerActive]);
+  }, [refetchBuzzers, refetchMatch, refetchQuestion, id, timerActive]);
 
   // Separate timer countdown effect
   useEffect(() => {
@@ -77,35 +92,14 @@ function MainScreen() {
     return () => clearInterval(interval);
   }, [timerActive, timer]);
 
-  // Filter questions by match type (if applicable)
-  const filteredQuestions = match?.match_type
-    ? questions?.filter(
-        (q) => q.q_type.toLowerCase() === match.match_type.toLowerCase()
-      )
-    : questions;
-
-  // Utility to grab a random question
-  const getRandomQuestion = () => {
-    if (!filteredQuestions) return null;
-
-    // Reset if we've asked all
-    if (previousQuestion.length >= filteredQuestions.length) {
-      setPreviousQuestion([]);
+  const handleStartMatch = () => {
+    if (match?.status === 'pending') {
+      startMatchMutation.mutate(id!, {
+        onSuccess: () => {
+          refetchQuestion();
+        }
+      });
     }
-
-    // Filter out previously used questions
-    const availableQuestions = filteredQuestions.filter(
-      (_, index) => !previousQuestion.includes(index)
-    );
-
-    // Random pick from the remaining
-    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    const actualIndex = filteredQuestions.indexOf(
-      availableQuestions[randomIndex]
-    );
-
-    setPreviousQuestion((prev) => [...prev, actualIndex]);
-    return availableQuestions[randomIndex];
   };
 
   // Display confetti celebration effect for correct answers
@@ -145,16 +139,28 @@ function MainScreen() {
 
   // Button Handlers
   const handleNextQuestion = () => {
-    setBackgroundColor("white");
     setShowAnswer(false);
     setShowCorrectAnswer(false);
     setActiveOption(null);
-    const nextQuestion = getRandomQuestion();
-    setCurrentQuestion(nextQuestion || null);
+    
+    nextQuestionMutation.mutate(id!, {
+      onSuccess: (data) => {
+        refetchQuestion();
+        // Emit real-time question update
+        const socket = getSocket() || createSocket();
+        if (socket) {
+          socket.emit('question-updated', { matchId: id });
+        }
+      }
+    });
   };
 
   const handleCorrectOption = (selectedOption: string) => {
     setActiveOption(selectedOption);
+    // Reset answer states when selecting new option
+    setShowAnswer(false);
+    setShowCorrectAnswer(false);
+    
     if (selectedOption === currentQuestion?.correct_option) {
       setCorrectOption("correct");
       console.log("Congratulations!!!");
@@ -174,7 +180,6 @@ function MainScreen() {
     if (correctOption === "correct") {
       setShowCorrectAnswer(true);
       displayCelebration();
-      setBackgroundColor("white");
     } else {
       setShowAnswer(true);
     }
@@ -197,7 +202,7 @@ function MainScreen() {
       `}</style>
       <div
         className={`min-h-screen p-6 ${timer !== null && timer <= 5 && timerActive ? 'bg-red-500 animate-pulse' : 'bg-gradient-to-br from-gold-50 via-white to-gold-100'} transition-all duration-500`}
-        style={{ backgroundColor: backgroundColor !== 'white' ? backgroundColor : undefined }}
+
       >
         <div className="flex justify-between gap-6 h-full">
           {/* Score Board */}
@@ -237,11 +242,57 @@ function MainScreen() {
                 className="mx-auto h-32 rounded-lg shadow-gold border-2 border-gold-200"
               />
               <h2 className="text-2xl font-bold text-gray-800 mt-4">
-                Quiz Championship
+                {match?.match_name} - {match?.match_type}
               </h2>
             </div>
 
-            {currentQuestion ? (
+            {/* Winner Screen */}
+            {isMatchComplete && winnerData ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🏆</div>
+                <h1 className="text-4xl font-bold text-gray-800 mb-4">
+                  {winnerData.isTie ? "It's a Tie!" : "We Have a Winner!"}
+                </h1>
+                
+                {winnerData.isTie ? (
+                  <div className="space-y-2">
+                    <p className="text-xl text-gray-600 mb-4">Multiple teams tied for first place:</p>
+                    {winnerData.winners.map((winner: any, index: number) => (
+                      <div key={index} className="text-2xl font-bold text-gold">
+                        🥇 {winner.teams.team_name} - {winner.score} points
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold text-gold mb-2">
+                      🥇 {winnerData.winner.teams.team_name}
+                    </div>
+                    <div className="text-xl text-gray-600">
+                      Final Score: {winnerData.winner.score} points
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-8">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Final Scores</h3>
+                  <div className="space-y-2 max-w-md mx-auto">
+                    {winnerData.finalScores
+                      .sort((a: any, b: any) => b.score - a.score)
+                      .map((team: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center bg-white p-3 rounded-lg shadow border border-gold-200">
+                          <span className="font-medium">{team.team}</span>
+                          <span className="font-bold text-gold">{team.score} points</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="animate-bounce text-4xl my-6">
+                  🎉 🎊 🎉
+                </div>
+              </div>
+            ) : currentQuestion ? (
               <div className="text-center">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg border-2 border-blue-200 mb-8 shadow-sm">
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">📝 Question</h3>
@@ -253,17 +304,14 @@ function MainScreen() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {["option_a", "option_b", "option_c", "option_d"].map(
                     (optionKey, index) => {
-                      const optionValue = currentQuestion
-                        ? currentQuestion[optionKey as keyof Question]
-                        : "";
+                      const optionValue = currentQuestion[optionKey as keyof typeof currentQuestion] as string;
                       const isActive = activeOption === optionValue;
-                      const isCorrect =
-                        optionValue === currentQuestion?.correct_option;
+                      const isCorrect = optionValue === currentQuestion?.correct_option;
 
                       let buttonClass = "bg-gold hover:bg-gold-600";
                       if (showCorrectAnswer && isCorrect) {
                         buttonClass = "bg-green-500 hover:bg-green-600";
-                      } else if (showAnswer && correctOption === 'wrong' && isActive) {
+                      } else if (showAnswer && isActive && !isCorrect) {
                         buttonClass = "bg-red-500 hover:bg-red-600";
                       } else if (isActive) {
                         buttonClass = "bg-blue-500 hover:bg-blue-600";
@@ -272,9 +320,7 @@ function MainScreen() {
                       return (
                         <button
                           key={optionKey}
-                          onClick={() =>
-                            handleCorrectOption(optionValue as string)
-                          }
+                          onClick={() => handleCorrectOption(optionValue)}
                           className={`${buttonClass} text-white text-lg h-20 rounded-lg font-bold transition-all duration-200 shadow-md border border-gold-300 flex items-center justify-center gap-3 p-4`}
                         >
                           <span className="font-bold text-gold w-10 h-10 bg-white rounded-md flex items-center justify-center text-xl">
@@ -290,53 +336,76 @@ function MainScreen() {
             ) : (
               <div className="text-center">
                 <div className="bg-gold-50 p-8 rounded-lg border border-gold-200">
-                  <p className="text-xl text-gray-700 font-medium">
-                    {filteredQuestions?.length
-                      ? "🚀 Ready to start the quiz?"
-                      : "❌ No questions available"}
-                  </p>
+                  {match?.status === 'pending' ? (
+                    <div>
+                      <p className="text-xl text-gray-700 font-medium mb-4">
+                        🚀 Ready to start the quiz?
+                      </p>
+                      <p className="text-gray-600 mb-6">
+                        This match has {match.question_count} questions ready to go!
+                      </p>
+                      <Button
+                        onClick={handleStartMatch}
+                        disabled={startMatchMutation.isPending}
+                        size="lg"
+                        className="shadow-gold"
+                      >
+                        {startMatchMutation.isPending ? "Starting..." : "🎯 Start Match"}
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-xl text-gray-700 font-medium">
+                      🎯 Click "Next Question" to begin!
+                    </p>
+                  )}
                 </div>
               </div>
             )}
 
-            {filteredQuestions?.length && (
-              <div className="mt-6 text-center">
-                <div className="bg-gold-50 p-3 rounded-lg border border-gold-200 inline-block">
-                  <p className="text-gray-700 font-medium">
-                    📊 Questions remaining:{" "}
-                    <span className="font-bold text-gold text-lg">
-                      {filteredQuestions.length - previousQuestion.length}
-                    </span>
-                  </p>
-                </div>
+
+
+            {!isMatchComplete && (
+              <div className="flex justify-center gap-4 mt-8">
+                {currentQuestion && (
+                  <>
+                    <Button
+                      onClick={handleNextQuestion}
+                      disabled={nextQuestionMutation.isPending}
+                      size="lg"
+                      className="shadow-gold"
+                    >
+                      {nextQuestionMutation.isPending ? "Processing..." : "⏭️ Next Question"}
+                    </Button>
+                    <Button
+                      onClick={handleCheckButton}
+                      variant="secondary"
+                      size="lg"
+                    >
+                      ✅ Check Answer
+                    </Button>
+                    {showAnswer && (
+                      <Button
+                        onClick={() => setShowCorrectAnswer(true)}
+                        className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                        size="lg"
+                      >
+                        🎯 Reveal Answer
+                      </Button>
+                    )}
+                  </>
+                )}
+                {!currentQuestion && match?.status === 'active' && (
+                  <Button
+                    onClick={handleNextQuestion}
+                    disabled={nextQuestionMutation.isPending}
+                    size="lg"
+                    className="shadow-gold"
+                  >
+                    {nextQuestionMutation.isPending ? "Loading..." : "🎯 Start Quiz"}
+                  </Button>
+                )}
               </div>
             )}
-
-            <div className="flex justify-center gap-4 mt-8">
-              <Button
-                onClick={handleNextQuestion}
-                size="lg"
-                className="shadow-gold"
-              >
-                ⏭️ Next Question
-              </Button>
-              <Button
-                onClick={handleCheckButton}
-                variant="secondary"
-                size="lg"
-              >
-                ✅ Check Answer
-              </Button>
-              {showAnswer && (
-                <Button
-                  onClick={() => setShowCorrectAnswer(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
-                  size="lg"
-                >
-                  🎯 Reveal Answer
-                </Button>
-              )}
-            </div>
           </div>
 
           {/* Buzzers */}

@@ -1,13 +1,12 @@
 const { where } = require("sequelize");
 const db = require("../models");
-const { model } = require("mongoose");
 
 exports.createMatch = async (req, res) => {
-    const { match_name, match_type, team_ids } = req.body;
+    const { match_name, match_type, team_ids, question_count } = req.body;
     const user_id = req.user.id;
 
     // Validate input data
-    if (!match_name || !match_type || !Array.isArray(team_ids) || team_ids.length === 0) {
+    if (!match_name || !match_type || !Array.isArray(team_ids) || team_ids.length === 0 || !question_count) {
         return res.status(400).json({ error: "Invalid input data. Ensure all fields are provided." });
     }
 
@@ -20,9 +19,32 @@ exports.createMatch = async (req, res) => {
             return res.status(400).json({ error: "Some teams do not exist or don't belong to you." });
         }
 
+        // Check if user has enough questions
+        const availableQuestions = await db.Question.findAll({ where: { user_id } });
+        if (availableQuestions.length < question_count) {
+            return res.status(400).json({ error: `Not enough questions. You have ${availableQuestions.length} questions but need ${question_count}.` });
+        }
+
         // Create a new match record
         const matchType = match_type.toLowerCase();
-        const newMatch = await db.Match.create({ match_name, match_type: matchType, user_id });
+        const newMatch = await db.Match.create({ 
+            match_name, 
+            match_type: matchType, 
+            question_count,
+            user_id 
+        });
+
+        // Randomly select questions for this match
+        const shuffledQuestions = availableQuestions.sort(() => 0.5 - Math.random());
+        const selectedQuestions = shuffledQuestions.slice(0, question_count);
+
+        // Create Match_Question entries
+        const matchQuestionEntries = selectedQuestions.map((question, index) => ({
+            match_id: newMatch.id,
+            question_id: question.id,
+            question_order: index + 1
+        }));
+        await db.Match_Question.bulkCreate(matchQuestionEntries);
 
         // Create entries in the Team_Match table for each team participating in the match
         const teamMatchEntries = team_ids.map((team_id) => ({
@@ -87,6 +109,7 @@ exports.getAllMatches = async (req, res) => {
         // Fetch all matches along with associated teams and their scores
         const { count, rows: matches } = await db.Match.findAndCountAll({
             where: { user_id },
+            attributes: ['id', 'match_name', 'match_type', 'question_count', 'status', 'createdAt', 'updatedAt'],
             include: [
                 {
                     model: db.Team_Match,
@@ -99,6 +122,7 @@ exports.getAllMatches = async (req, res) => {
                     ],
                 },
             ],
+            order: [['createdAt', 'DESC']]
         });
 
         res.status(200).json({ count, matches });
@@ -195,6 +219,160 @@ exports.updateMatch = async (req, res) => {
     } catch (error) {
         console.error(`Failed to update match with id ${matchId}:`, error);
         res.status(500).json({ error: "Failed to update match." });
+    }
+};
+
+exports.startMatch = async (req, res) => {
+    const matchId = req.params.id;
+    const user_id = req.user.id;
+
+    try {
+        const match = await db.Match.findOne({ where: { id: matchId, user_id } });
+        if (!match) {
+            return res.status(404).json({ error: "Match not found." });
+        }
+
+        await match.update({ status: 'active' });
+        res.status(200).json({ message: "Match started successfully.", match });
+    } catch (error) {
+        console.error("Error starting match:", error);
+        res.status(500).json({ error: "Failed to start match." });
+    }
+};
+
+exports.getCurrentQuestion = async (req, res) => {
+    const matchId = req.params.id;
+    const user_id = req.user.id;
+
+    try {
+        const match = await db.Match.findOne({ where: { id: matchId, user_id } });
+        if (!match) {
+            return res.status(404).json({ error: "Match not found." });
+        }
+
+        const currentQuestion = await db.Match_Question.findOne({
+            where: { match_id: matchId, question_order: match.current_question_index + 1 },
+            include: [{
+                model: db.Question,
+                as: "question"
+            }]
+        });
+
+        if (!currentQuestion) {
+            return res.status(200).json({ 
+                message: "No more questions", 
+                question: null,
+                isComplete: true,
+                progress: { current: match.current_question_index, total: match.question_count }
+            });
+        }
+
+        res.status(200).json({ 
+            question: currentQuestion.question,
+            isComplete: false,
+            progress: { current: match.current_question_index + 1, total: match.question_count }
+        });
+    } catch (error) {
+        console.error("Error getting current question:", error);
+        res.status(500).json({ error: "Failed to get current question." });
+    }
+};
+
+exports.nextQuestion = async (req, res) => {
+    const matchId = req.params.id;
+    const user_id = req.user.id;
+
+    try {
+        const match = await db.Match.findOne({ where: { id: matchId, user_id } });
+        if (!match) {
+            return res.status(404).json({ error: "Match not found." });
+        }
+
+        // Get current question to delete
+        const currentQuestion = await db.Match_Question.findOne({
+            where: { match_id: matchId, question_order: match.current_question_index + 1 },
+            include: [{
+                model: db.Question,
+                as: "question"
+            }]
+        });
+
+        if (currentQuestion) {
+            // Delete the question permanently from Questions table
+            await db.Question.destroy({ where: { id: currentQuestion.question_id } });
+            
+            // Remove from Match_Question table
+            await db.Match_Question.destroy({ where: { id: currentQuestion.id } });
+        }
+
+        // Update match progress
+        const newIndex = match.current_question_index + 1;
+        await match.update({ current_question_index: newIndex });
+
+        // Check if match is complete
+        if (newIndex >= match.question_count) {
+            await match.update({ status: 'completed' });
+            return res.status(200).json({ 
+                message: "Match completed", 
+                isComplete: true,
+                progress: { current: newIndex, total: match.question_count }
+            });
+        }
+
+        res.status(200).json({ 
+            message: "Question deleted and moved to next", 
+            isComplete: false,
+            progress: { current: newIndex, total: match.question_count }
+        });
+    } catch (error) {
+        console.error("Error moving to next question:", error);
+        res.status(500).json({ error: "Failed to move to next question." });
+    }
+};
+
+exports.getWinner = async (req, res) => {
+    const matchId = req.params.id;
+    const user_id = req.user.id;
+
+    try {
+        const match = await db.Match.findOne({
+            where: { id: matchId, user_id },
+            include: [{
+                model: db.Team_Match,
+                as: "rounds",
+                include: [{
+                    model: db.Team,
+                    as: "teams"
+                }]
+            }]
+        });
+
+        if (!match) {
+            return res.status(404).json({ error: "Match not found." });
+        }
+
+        // Find the team with highest score
+        const winner = match.rounds.reduce((prev, current) => 
+            (prev.score > current.score) ? prev : current
+        );
+
+        // Check for ties
+        const maxScore = winner.score;
+        const winners = match.rounds.filter(round => round.score === maxScore);
+
+        res.status(200).json({ 
+            match,
+            winner: winners.length === 1 ? winner : null,
+            winners: winners.length > 1 ? winners : null,
+            isTie: winners.length > 1,
+            finalScores: match.rounds.map(round => ({
+                team: round.teams.team_name,
+                score: round.score
+            }))
+        });
+    } catch (error) {
+        console.error("Error getting winner:", error);
+        res.status(500).json({ error: "Failed to get winner." });
     }
 };
 

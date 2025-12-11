@@ -7,6 +7,7 @@ export const matchData = z.object({
   team_ids: z.array(z.string()),
   match_name: z.string(),
   match_type: z.string(),
+  question_count: z.number().min(1),
 });
 
 export type matchDataFormat = z.infer<typeof matchData>;
@@ -16,9 +17,13 @@ const useAddMatch = () => {
 
   return useMutation({
     mutationFn: async (data: matchDataFormat) => {
-      matchData.parse(data);
+      const parsedData = {
+        ...data,
+        question_count: Number(data.question_count)
+      };
+      matchData.parse(parsedData);
 
-      const response = await axios.post("/match/add", data);
+      const response = await axios.post("/match/add", parsedData);
       return response;
     },
     onSuccess: (response) => {

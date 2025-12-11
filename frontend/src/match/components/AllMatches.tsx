@@ -1,17 +1,37 @@
 import { Link } from "react-router-dom";
 import useAllMatches from "../hooks/useAllMatches";
 import useDeleteMatch from "../hooks/useDeleteMatch";
+import useStartMatch from "../hooks/useStartMatch";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
 
 function AllMatches() {
   const { data: matches, isError, isLoading } = useAllMatches();
   const { mutate: deleteMatch } = useDeleteMatch();
+  const { mutate: startMatch } = useStartMatch();
 
   const handleDeleteMatch = (id: number) => {
     if (window.confirm('Are you sure you want to delete this match?')) {
       deleteMatch(id);
     }
+  };
+
+  const handleStartMatch = (id: number) => {
+    startMatch(String(id));
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '⏳ Pending' },
+      active: { bg: 'bg-green-100', text: 'text-green-800', label: '🎮 Active' },
+      completed: { bg: 'bg-gray-100', text: 'text-gray-800', label: '✅ Completed' }
+    };
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    return (
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
+    );
   };
 
   if (isLoading)
@@ -56,6 +76,8 @@ function AllMatches() {
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Match Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Match Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Questions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Teams & Scores</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
                 </tr>
@@ -74,33 +96,72 @@ function AllMatches() {
                         {match.match_type}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="text-center">
+                        <div className="font-semibold text-gold">{match.question_count || 0}</div>
+                        <div className="text-xs text-gray-500">Questions</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {getStatusBadge(match.status || 'pending')}
+                    </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="space-y-1">
-                        {match.rounds?.map((round) => (
-                          <div key={round.teams.id} className="flex items-center justify-between bg-gray-50 px-3 py-1 rounded text-sm">
-                            <span className="font-medium text-gray-700">{round.teams.team_name}</span>
-                            <span className="font-bold text-gold">{round.score} pts</span>
-                          </div>
-                        ))}
+                        {match.rounds
+                          ?.sort((a, b) => b.score - a.score)
+                          .map((round, index) => {
+                            const isWinner = index === 0 && match.status === 'completed';
+                            return (
+                              <div 
+                                key={round.teams.id} 
+                                className={`flex items-center justify-between px-3 py-1 rounded text-sm ${
+                                  isWinner 
+                                    ? 'bg-gold-100 border-2 border-gold-300' 
+                                    : 'bg-gray-50'
+                                }`}
+                              >
+                                <span className={`font-medium ${
+                                  isWinner ? 'text-gold-800' : 'text-gray-700'
+                                }`}>
+                                  {isWinner ? '🏆 ' : ''}{round.teams.team_name}
+                                </span>
+                                <span className="font-bold text-gold">{round.score} pts</span>
+                              </div>
+                            );
+                          })
+                        }
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex flex-wrap gap-2">
+                        {match.status === 'pending' && (
+                          <Button
+                            size="sm"
+                            className="text-xs bg-green-600 hover:bg-green-700"
+                            onClick={() => handleStartMatch(match.id)}
+                          >
+                            🚀 Start
+                          </Button>
+                        )}
+                        {(match.status === 'active' || match.status === 'completed') && (
+                          <Link to={`/match/${match.id}/quiz`}>
+                            <Button size="sm" className="text-xs">
+                              🎮 Play
+                            </Button>
+                          </Link>
+                        )}
                         <Link to={`/match/${match.id}/scoreboard`}>
-                          <Button size="sm" className="text-xs">
+                          <Button variant="secondary" size="sm" className="text-xs">
                             📊 Scoreboard
                           </Button>
                         </Link>
-                        <Link to={`/match/${match.id}/quiz`}>
-                          <Button variant="secondary" size="sm" className="text-xs">
-                            🎮 Quiz
-                          </Button>
-                        </Link>
-                        <Link to={`/match/${match.id}/edit`}>
-                          <Button variant="secondary" size="sm" className="text-xs">
-                            ✏️ Edit
-                          </Button>
-                        </Link>
+                        {match.status === 'pending' && (
+                          <Link to={`/match/${match.id}/edit`}>
+                            <Button variant="secondary" size="sm" className="text-xs">
+                              ✏️ Edit
+                            </Button>
+                          </Link>
+                        )}
                         <Button
                           variant="danger"
                           size="sm"
