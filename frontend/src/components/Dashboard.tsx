@@ -38,10 +38,10 @@ function Dashboard() {
       link: "/question/all_questions",
     },
     {
-      label: "Active Matches",
-      value: matchesList.filter((m: any) => m.match_name).length,
-      icon: "⚡",
-      color: "from-yellow-400 to-gold-500",
+      label: "Completed Matches",
+      value: matchesList.filter((m: any) => m.status === 'completed').length,
+      icon: "✅",
+      color: "from-green-400 to-green-600",
       link: "/match/all_matches",
     },
   ];
@@ -180,14 +180,30 @@ function Dashboard() {
                             {match.match_name}
                           </h3>
                           <p className="text-gray-600 text-sm">
-                            Type: {match.match_type}
+                            Type: {match.match_type} • {match.question_count || 0} Questions
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-gold font-bold text-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            {match.status === 'pending' && (
+                              <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                                ⏳ Pending
+                              </span>
+                            )}
+                            {match.status === 'active' && (
+                              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                                🎮 Active
+                              </span>
+                            )}
+                            {match.status === 'completed' && (
+                              <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                                ✅ Completed
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gold font-bold text-sm">
                             {match.rounds?.length || 0} Teams
                           </p>
-                          <p className="text-gray-600 text-sm">Participating</p>
                         </div>
                       </div>
                     </motion.div>

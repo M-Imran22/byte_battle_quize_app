@@ -101,19 +101,27 @@ function Scoreboard() {
                   onChange={(e) =>
                     handleScoreChange(round.id, parseInt(e.target.value) || 0)
                   }
-                  className="input-field"
+                  disabled={match?.status === 'completed'}
+                  className={`input-field ${match?.status === 'completed' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 />
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      <Button
-        onClick={handleSubmit}
-        className="btn-primary mt-6"
-      >
-        Update Score
-      </Button>
+      {match?.status !== 'completed' && (
+        <Button
+          onClick={handleSubmit}
+          className="btn-primary mt-6"
+        >
+          Update Score
+        </Button>
+      )}
+      {match?.status === 'completed' && (
+        <div className="mt-6 text-center p-3 bg-gray-100 rounded-lg">
+          <span className="text-gray-600 font-medium">🏁 Match completed - Scores are locked</span>
+        </div>
+      )}
     </div>
   );
 }

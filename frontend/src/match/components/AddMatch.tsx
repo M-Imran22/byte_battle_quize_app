@@ -115,16 +115,11 @@ export const AddMatch = () => {
                 className="input-field"
               >
                 <option value="">Select match type</option>
-                <option value="ICT">ICT</option>
-                <option value="General Knowledge">General Knowledge</option>
-                <option value="English">English</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Science">Science</option>
-                <option value="History">History</option>
-                <option value="Geography">Geography</option>
-                <option value="Sports">Sports</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Current Affairs">Current Affairs</option>
+                {q_types?.map((type) => (
+                  <option key={type.question_type} value={type.question_type}>
+                    {type.question_type}
+                  </option>
+                ))}
               </select>
             </div>
             

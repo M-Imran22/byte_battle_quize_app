@@ -19,17 +19,21 @@ exports.createMatch = async (req, res) => {
             return res.status(400).json({ error: "Some teams do not exist or don't belong to you." });
         }
 
-        // Check if user has enough questions
-        const availableQuestions = await db.Question.findAll({ where: { user_id } });
+        // Check if user has enough questions of the specified type
+        const whereClause = { user_id };
+        if (match_type && match_type !== 'All Types') {
+            whereClause.q_type = match_type;
+        }
+        
+        const availableQuestions = await db.Question.findAll({ where: whereClause });
         if (availableQuestions.length < question_count) {
-            return res.status(400).json({ error: `Not enough questions. You have ${availableQuestions.length} questions but need ${question_count}.` });
+            return res.status(400).json({ error: `Not enough ${match_type} questions. You have ${availableQuestions.length} questions but need ${question_count}.` });
         }
 
         // Create a new match record
-        const matchType = match_type.toLowerCase();
         const newMatch = await db.Match.create({ 
             match_name, 
-            match_type: matchType, 
+            match_type, 
             question_count,
             user_id 
         });
@@ -76,6 +80,15 @@ exports.updateScore = async (req, res) => {
         if (!round.team_id || !round.match_id || round.score === undefined) {
             return res.status(400).json({ error: "Invalid input data. Each item must contain team_id, match_id, and score." });
         }
+    }
+
+    // Check if any match is completed
+    const matchIds = [...new Set(rounds.map(round => round.match_id))];
+    const matches = await db.Match.findAll({ where: { id: matchIds } });
+    const completedMatch = matches.find(match => match.status === 'completed');
+    
+    if (completedMatch) {
+        return res.status(400).json({ error: "Cannot update scores for completed matches." });
     }
 
     const transaction = await db.sequelize.transaction(); // Start a transaction
