@@ -308,7 +308,7 @@ function MainScreen() {
               <img
                 src={byteBattleLogo}
                 alt="ByteBattle24 Logo"
-                className="mx-auto h-36 rounded-lg shadow-gold border-2 border-gold-200"
+                className="mx-auto h-64 w-64 rounded-lg shadow-gold border-2 border-gold-200"
               />
               <h2 className="text-2xl font-bold text-gray-800 mt-4">
                 {match?.match_name} - {match?.match_type}
@@ -374,7 +374,7 @@ function MainScreen() {
                   <h3 className="text-2xl font-bold text-gray-800 mb-4">
                     📝 Question
                   </h3>
-                  <p className="text-2xl text-gray-800 font-semibold leading-relaxed">
+                  <p className="text-3xl text-gray-800 font-semibold leading-relaxed">
                     {currentQuestion.question}
                   </p>
                 </div>
