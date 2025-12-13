@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { matchDataFormat } from "../hooks/useAddMatch";
 import useAllTeams from "../../teams/hooks/useAllTeams";
+import useAllQuestoin_type from "../../questions/hooks/useAllQuestion_type";
 import { useEffect, useState } from "react";
 import useEditMatch from "../hooks/useEditMatch";
 import { useParams } from "react-router-dom";
@@ -14,6 +15,7 @@ export const EditMatch = () => {
   const { mutate } = useEditMatch(id);
   const { data: match } = useSingleMatch(id);
   const { data: teams, isLoading, isError } = useAllTeams();
+  const { data: q_types } = useAllQuestoin_type();
   const [teamSections, setTeamSections] = useState<
     { id: string; value: string }[]
   >([]);
@@ -105,16 +107,11 @@ export const EditMatch = () => {
                 <option value="">
                   {match?.match_type || "Select match type"}
                 </option>
-                <option value="ICT">ICT</option>
-                <option value="General Knowledge">General Knowledge</option>
-                <option value="English">English</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Science">Science</option>
-                <option value="History">History</option>
-                <option value="Geography">Geography</option>
-                <option value="Sports">Sports</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Current Affairs">Current Affairs</option>
+                {q_types?.map((type) => (
+                  <option key={type.question_type} value={type.question_type}>
+                    {type.question_type}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex-1">
