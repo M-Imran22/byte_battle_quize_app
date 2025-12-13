@@ -120,6 +120,18 @@ app.use(express.urlencoded({ extended: false }))
 app.use("/api/register", registerRouter)
 app.use("/api/login", loginTouter)
 app.use("/api/refresh_token", refreshTokenRouter)
+// Public endpoint for all teams (for buzzer)
+app.get('/api/public/teams', async (req, res) => {
+    try {
+        const teams = await db.Team.findAll({
+            attributes: ['id', 'team_name']
+        });
+        res.json({ teams });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch teams' });
+    }
+});
+
 // Public endpoint for buzzer teams (by match)
 app.get('/api/public/teams/:matchId', async (req, res) => {
     try {
