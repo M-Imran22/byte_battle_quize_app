@@ -63,6 +63,16 @@ const BuzzerPage = () => {
     setIsPressed(true);
     const timestamp = new Date().toISOString();
 
+    // Play buzzer sound
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audio.volume = 0.7;
+    audio.play().catch(e => console.log('Audio play failed:', e));
+
+    // Vibrate device
+    if (navigator.vibrate) {
+      navigator.vibrate(200);
+    }
+
     // Emit real-time buzzer press FIRST
     const backendUrl =
       import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
