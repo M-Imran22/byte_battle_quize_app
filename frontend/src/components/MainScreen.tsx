@@ -25,6 +25,8 @@ function MainScreen() {
 
   const [timer, setTimer] = useState<number | null>(null);
   const [timerActive, setTimerActive] = useState(false);
+  const [showWrongBg, setShowWrongBg] = useState(false);
+  const [showCorrectBg, setShowCorrectBg] = useState(false);
 
   const currentQuestion = questionData?.question;
   const isMatchComplete = questionData?.isComplete;
@@ -104,6 +106,15 @@ function MainScreen() {
 
   // Display confetti celebration effect for correct answers
   const displayCelebration = () => {
+    // Play correct answer sound
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+    audio.volume = 0.4;
+    audio.play().catch(e => console.log('Audio play failed:', e));
+
+    // Show green background
+    setShowCorrectBg(true);
+    setTimeout(() => setShowCorrectBg(false), 2000);
+
     const confettiContainer = document.createElement("div");
     confettiContainer.id = "confetti-container";
     Object.assign(confettiContainer.style, {
@@ -117,24 +128,29 @@ function MainScreen() {
     });
     document.body.appendChild(confettiContainer);
 
-    for (let i = 0; i < 250; i++) {
+    const colors = ['#FFD700', '#FFA500', '#FF6347', '#00FF00', '#00CED1', '#FF1493'];
+    for (let i = 0; i < 500; i++) {
       const confetti = document.createElement("div");
       confetti.className = "confetti";
+      const size = Math.random() * 15 + 10;
       Object.assign(confetti.style, {
         position: "absolute",
-        width: "20px",
-        height: "20px",
-        backgroundColor: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        width: `${size}px`,
+        height: `${size}px`,
+        backgroundColor: colors[Math.floor(Math.random() * colors.length)],
         left: `${Math.random() * 100}%`,
-        animation: `fall ${Math.random() * 2 + 3}s ease-in-out`,
+        top: `-${Math.random() * 20}%`,
+        borderRadius: Math.random() > 0.5 ? '50%' : '0',
+        animation: `fall ${Math.random() * 3 + 2}s linear`,
         transform: `rotate(${Math.random() * 360}deg)`,
+        opacity: Math.random() * 0.5 + 0.5,
       });
       confettiContainer.appendChild(confetti);
     }
 
     setTimeout(() => {
       confettiContainer.remove();
-    }, 4000); // Remove confetti after 4 seconds
+    }, 5000);
   };
 
   // Button Handlers
@@ -142,6 +158,8 @@ function MainScreen() {
     setShowAnswer(false);
     setShowCorrectAnswer(false);
     setActiveOption(null);
+    setShowWrongBg(false);
+    setShowCorrectBg(false);
     
     nextQuestionMutation.mutate(id!, {
       onSuccess: (data) => {
@@ -170,6 +188,22 @@ function MainScreen() {
     }
   };
 
+  const playWrongSound = () => {
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2955/2955-preview.mp3');
+    audio.volume = 0.3;
+    audio.play().catch(e => console.log('Audio play failed:', e));
+  };
+
+  const displayWrongEffect = () => {
+    const screen = document.querySelector('.main-screen-container');
+    if (screen) {
+      screen.classList.add('shake-animation');
+      setTimeout(() => screen.classList.remove('shake-animation'), 500);
+    }
+    setShowWrongBg(true);
+    setTimeout(() => setShowWrongBg(false), 1500);
+  };
+
   const handleCheckButton = () => {
     if (activeOption === null) return;
     
@@ -182,12 +216,14 @@ function MainScreen() {
       displayCelebration();
     } else {
       setShowAnswer(true);
+      playWrongSound();
+      displayWrongEffect();
     }
   };
 
   return (
     <>
-      {/* Global styles for confetti animation */}
+      {/* Global styles for confetti and shake animation */}
       <style>{`
         @keyframes fall {
           0% {
@@ -199,10 +235,22 @@ function MainScreen() {
             opacity: 0;
           }
         }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+          20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+        .shake-animation {
+          animation: shake 0.5s;
+        }
       `}</style>
       <div
-        className={`min-h-screen p-6 ${timer !== null && timer <= 5 && timerActive ? 'bg-red-500 animate-pulse' : 'bg-gradient-to-br from-gold-50 via-white to-gold-100'} transition-all duration-500`}
-
+        className={`main-screen-container min-h-screen p-6 ${
+          showCorrectBg ? 'bg-green-500' :
+          showWrongBg ? 'bg-red-500' : 
+          timer !== null && timer <= 5 && timerActive ? 'bg-red-500 animate-pulse' : 
+          'bg-gradient-to-br from-gold-50 via-white to-gold-100'
+        } transition-all duration-500`}
       >
         <div className="flex justify-between gap-6 h-full">
           {/* Score Board */}
