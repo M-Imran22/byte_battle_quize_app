@@ -12,15 +12,17 @@ function Nevbar() {
     <nav className="bg-white shadow-lg border-b-4 border-gold fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-8 py-4">
         <div className="flex justify-between items-center">
-          <Link to="/dashboard" className="flex items-center">
+          <Link to="/dashboard" className="flex items-center group">
             <img
               src={logo}
               alt="ByteBattle Logo"
-              className="h-16 w-16 rounded-full shadow-md border-2 border-gold"
+              className="h-16 w-16 rounded-lg shadow-lg group-hover:shadow-2xl transition-all duration-300"
             />
             <div className="ml-4">
-              <h1 className="text-2xl font-bold text-gold">ByteBattle</h1>
-              <p className="text-sm text-gray-600">Quiz Championship</p>
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 bg-clip-text text-transparent group-hover:scale-105 transition-transform duration-300">
+                ByteBattle
+              </h1>
+              <p className="text-sm font-semibold text-gray-600 tracking-wide">Quiz Championship</p>
             </div>
           </Link>
 
