@@ -107,29 +107,35 @@ function AllMatches() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="space-y-1">
-                        {match.rounds
-                          ?.sort((a, b) => b.score - a.score)
-                          .map((round, index) => {
-                            const isWinner = index === 0 && match.status === 'completed';
+                        {(() => {
+                          const sortedRounds = match.rounds?.sort((a, b) => b.score - a.score) || [];
+                          const maxScore = sortedRounds[0]?.score || 0;
+                          const winners = sortedRounds.filter(r => r.score === maxScore);
+                          const isTie = winners.length > 1 && match.status === 'completed';
+                          
+                          return sortedRounds.map((round, index) => {
+                            const isWinner = round.score === maxScore && match.status === 'completed';
                             return (
                               <div 
                                 key={round.teams.id} 
                                 className={`flex items-center justify-between px-3 py-1 rounded text-sm ${
-                                  isWinner 
+                                  isTie && isWinner
+                                    ? 'bg-purple-100 border-2 border-purple-300' 
+                                    : isWinner 
                                     ? 'bg-gold-100 border-2 border-gold-300' 
                                     : 'bg-gray-50'
                                 }`}
                               >
                                 <span className={`font-medium ${
-                                  isWinner ? 'text-gold-800' : 'text-gray-700'
+                                  isTie && isWinner ? 'text-purple-800' : isWinner ? 'text-gold-800' : 'text-gray-700'
                                 }`}>
-                                  {isWinner ? '🏆 ' : ''}{round.teams.team_name}
+                                  {isTie && isWinner ? '🤝 ' : isWinner ? '🏆 ' : ''}{round.teams.team_name}
                                 </span>
                                 <span className="font-bold text-gold">{round.score} pts</span>
                               </div>
                             );
-                          })
-                        }
+                          });
+                        })()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
