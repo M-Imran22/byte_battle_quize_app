@@ -25,7 +25,7 @@ export const AllQuestions = () => {
   ];
 
   const handleDeleteQuestion = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this question?')) {
+    if (window.confirm("Are you sure you want to delete this question?")) {
       deleteQuestion(id, {
         onSuccess: () => {
           console.log(`Question with ID ${id} has been deleted successfully.`);
@@ -65,9 +65,11 @@ export const AllQuestions = () => {
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
               🤔 Question Bank
             </h1>
-            <p className="text-gray-600">Manage quiz questions and categories</p>
+            <p className="text-gray-600">
+              Manage quiz questions and categories
+            </p>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
             <div className="relative">
               <select
@@ -82,11 +84,13 @@ export const AllQuestions = () => {
                 ))}
               </select>
             </div>
-            
-            <div className="flex gap-3">
 
+            <div className="flex gap-3">
               <Link to="/question/excel_import">
-                <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white shadow-lg whitespace-nowrap">
+                <Button
+                  size="lg"
+                  className="bg-green-600 hover:bg-green-700 text-white shadow-lg whitespace-nowrap"
+                >
                   <span className="mr-2">📊</span>
                   Excel Import
                 </Button>
@@ -101,40 +105,62 @@ export const AllQuestions = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gradient-to-r from-gold-50 to-gold-100 text-gold-800 font-semibold">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Question</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Correct</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                      ID
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                      Question
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                      Correct
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredQuestions.map((question) => (
-                    <tr key={question.id} className="hover:bg-gold-50 transition-colors duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span className="font-semibold text-gold">#{question.id}</span>
+                    <tr
+                      key={question.id}
+                      className="hover:bg-gold-50 transition-colors duration-150"
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className="font-semibold text-gold">
+                          #{question.id}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {question.q_type}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
+                      <td className="px-4 py-4 text-sm text-gray-900">
                         <div className="max-w-xs">
-                          <p className="font-medium text-gray-800 truncate" title={question.question}>
+                          <p
+                            className="font-medium text-gray-800 truncate"
+                            title={question.question}
+                          >
                             {question.question}
                           </p>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800">
                           {question.correct_option}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="flex gap-2">
                           <Link to={`/question/${question.id}/edit`}>
-                            <Button variant="secondary" size="sm" className="text-xs">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              className="text-xs"
+                            >
                               ✏️ Edit
                             </Button>
                           </Link>
@@ -158,15 +184,17 @@ export const AllQuestions = () => {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🤔</div>
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              {SelectedType ? `No ${SelectedType} questions found` : 'No questions yet'}
+              {SelectedType
+                ? `No ${SelectedType} questions found`
+                : "No questions yet"}
             </h3>
             <p className="text-gray-600 mb-6">
-              {SelectedType ? 'Try selecting a different category' : 'Import your first questions from Excel to get started'}
+              {SelectedType
+                ? "Try selecting a different category"
+                : "Import your first questions from Excel to get started"}
             </p>
             <Link to="/question/excel_import">
-              <Button>
-                Import Questions from Excel
-              </Button>
+              <Button>Import Questions from Excel</Button>
             </Link>
           </div>
         )}
